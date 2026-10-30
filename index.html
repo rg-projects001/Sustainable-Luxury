@@ -16,6 +16,7 @@ html,body{margin:0}
   --wine:#264733; --wine-ink:#FBF8F1; --wine-soft:#DCE6D6;
   --done:#3E7A4C; --done-bg:#DFEBD8; --prog:#946A1E; --prog-bg:#F3E6CB; --open:#5F5290; --open-bg:#E7E3F0;
   --block:#A4532A; --block-bg:#F4E1D3; --todo:#857E6E; --todo-bg:#EEE8DB; --risk:#AE3326; --risk-bg:#F6DED7;
+  --h1:#2F5D3A; --h2:#A5751E; --h3:#A4532A; --h4:#6A4A86; --h5:#2E6F73; --h6:#6B7A2E; --h7:#8F5B44; --h8:#4E5D72;
   --display:"Cormorant Garamond","Iowan Old Style",Georgia,serif;
   --ui:"IBM Plex Sans","Noto Sans Telugu",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -23,12 +24,14 @@ html,body{margin:0}
   --bg:#141813; --surface:#1C211B; --ink:#EEE8DA; --muted:#A8AC9C; --line:#323A2F; --wash:#222920; --shade:rgba(0,0,0,.55);
   --wine:#A9CDA9; --wine-ink:#132016; --wine-soft:#22342A;
   --done:#86C48F; --done-bg:#1E2F22; --prog:#E0B36A; --prog-bg:#33291A; --open:#B4A8DE; --open-bg:#262338;
-  --block:#EBA07C; --block-bg:#38261B; --todo:#A4A091; --todo-bg:#23281F; --risk:#F08A80; --risk-bg:#3A1F1A; color-scheme:dark}}
+  --block:#EBA07C; --block-bg:#38261B; --todo:#A4A091; --todo-bg:#23281F; --risk:#F08A80; --risk-bg:#3A1F1A;
+  --h1:#8CC092; --h2:#E0B36A; --h3:#EBA07C; --h4:#BFA2DA; --h5:#7FBFC2; --h6:#C2CC7A; --h7:#D69C80; --h8:#9FB0CC; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#141813; --surface:#1C211B; --ink:#EEE8DA; --muted:#A8AC9C; --line:#323A2F; --wash:#222920; --shade:rgba(0,0,0,.55);
   --wine:#A9CDA9; --wine-ink:#132016; --wine-soft:#22342A;
   --done:#86C48F; --done-bg:#1E2F22; --prog:#E0B36A; --prog-bg:#33291A; --open:#B4A8DE; --open-bg:#262338;
-  --block:#EBA07C; --block-bg:#38261B; --todo:#A4A091; --todo-bg:#23281F; --risk:#F08A80; --risk-bg:#3A1F1A; color-scheme:dark}
+  --block:#EBA07C; --block-bg:#38261B; --todo:#A4A091; --todo-bg:#23281F; --risk:#F08A80; --risk-bg:#3A1F1A;
+  --h1:#8CC092; --h2:#E0B36A; --h3:#EBA07C; --h4:#BFA2DA; --h5:#7FBFC2; --h6:#C2CC7A; --h7:#D69C80; --h8:#9FB0CC; color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -73,8 +76,8 @@ body.readonly .ro-only{display:block}
 .dot{background:var(--c)} .st-todo .dot,.dot.st-todo{background:transparent;border:1.5px solid var(--todo)}
 
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-.tabs{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--surface)}
-.tabs button{border:0;background:none;padding:7px 14px;cursor:pointer;font-weight:500;color:var(--muted)}
+.tabs{max-width:100%;overflow-x:auto;scrollbar-width:none;display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--surface)}
+.tabs button{white-space:nowrap;flex:none;border:0;background:none;padding:7px 14px;cursor:pointer;font-weight:500;color:var(--muted)}
 .tabs button[aria-selected="true"]{background:var(--wine);color:var(--wine-ink)}
 .toolbar input[type=search]{padding:7px 11px;border:1px solid var(--line);border-radius:6px;background:var(--surface);min-width:180px;flex:1;max-width:280px}
 .toolbar select{padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
@@ -209,6 +212,70 @@ textarea.json{width:100%;min-height:160px;font-family:ui-monospace,Menlo,monospa
 .emptystate{background:var(--surface);border:1px dashed var(--line);border-radius:8px;padding:30px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
 .emptystate h2{font-size:26px}
 
+
+/* ideas */
+.ideahead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.ideahead h2{font-size:28px}
+.ideahead .help{max-width:62ch;margin-top:4px}
+.ideabar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.ideabar select{padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.seg .c{color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.ideagrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;align-items:start}
+.icard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;cursor:pointer;min-width:0}
+.icard:hover{border-color:var(--muted)}
+.icard.priv{border-style:dashed;background:var(--wash)}
+.icard h3{font-family:var(--display);font-size:21px;line-height:1.15;color:var(--ink);margin:0}
+.icard p{margin:0;font-size:13px;color:var(--ink);white-space:pre-line}
+.itop{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.icat{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ist{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px}
+.is-new{background:var(--open-bg);color:var(--open)} .is-exploring{background:var(--prog-bg);color:var(--prog)} .is-adopted{background:var(--done-bg);color:var(--done)} .is-parked{background:var(--todo-bg);color:var(--todo)}
+.seg .is-new[aria-pressed="true"],.seg .is-exploring[aria-pressed="true"],.seg .is-adopted[aria-pressed="true"],.seg .is-parked[aria-pressed="true"]{border-color:currentColor}
+.itags{display:flex;flex-wrap:wrap;gap:4px}
+.itags span{font-size:11.5px;color:var(--wine);background:var(--wine-soft);border-radius:4px;padding:0 6px}
+.ifoot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px}
+.iacts{display:flex;gap:6px;align-items:center}
+.vis{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 7px}
+.vis.team{color:var(--wine);border-color:var(--wine-soft)}
+.like{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 10px;font-size:12px;cursor:pointer;color:var(--muted)}
+.like.on{color:var(--risk);border-color:var(--risk);background:var(--risk-bg)}
+/* mind map */
+.mmbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.mmwrap{position:relative;height:min(78vh,860px);min-height:420px;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}
+#mmsvg{width:100%;height:100%;display:block;touch-action:none;cursor:grab;user-select:none}
+#mmsvg:active{cursor:grabbing}
+.mme{fill:none;stroke-width:1.2}
+.mmx{stroke-width:1.2;stroke-opacity:.7}
+.mmx.dep{stroke:var(--muted);stroke-dasharray:4 4}
+.mmx.ilink{stroke:var(--wine);stroke-dasharray:1.5 4;stroke-linecap:round;stroke-width:1.6}
+.mmn{cursor:pointer}
+.mmn .st{stroke:var(--surface);stroke-width:1.5;fill:var(--c)}
+.mmn .st.st-todo{fill:var(--surface);stroke:var(--todo);stroke-width:1.6}
+.mmn.risk .st{stroke:var(--risk);stroke-width:2.2}
+.mmn .idn{fill:var(--hc);stroke:var(--surface);stroke-width:1.5}
+.mmn .idn.priv{fill:var(--surface);stroke:var(--hc);stroke-dasharray:2.5 2;stroke-width:1.6}
+.mml{font-family:var(--ui);font-size:11.5px;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+.mml.hubl{font-family:var(--display);font-size:17px;font-weight:600;fill:var(--ink)}
+.mml .cnt{font-family:var(--ui);font-size:11px;fill:var(--muted);font-weight:400}
+.mmc{font-family:var(--display);font-size:22px;font-weight:600;fill:var(--wine-ink)}
+.mmn.dim{opacity:.18}
+#mmsvg.focus .mmn:not(.on):not(.center),#mmsvg.focus .mml.hubl{opacity:.15}
+#mmsvg.focus .mme{opacity:.07}
+#mmsvg.focus .mme.on{opacity:1;stroke-width:2.2}
+.mmn:focus,.mmn:focus-visible{outline:none}
+.mmn:focus-visible .st,.mmn:focus-visible .idn{stroke:var(--wine);stroke-width:3}
+.mmzoom{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px}
+.mminfo{position:absolute;top:12px;right:12px;width:min(320px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.mminfo h3{font-family:var(--display);font-size:22px;line-height:1.15;color:var(--ink);margin:0;padding-right:28px}
+.mminfo p{margin:0;font-size:13px}
+.mminfo .fb{background:var(--risk-bg);border-radius:4px;padding:6px 8px}
+.mminfo .btn{align-self:flex-start}
+.mmx-close{position:absolute;right:10px;top:10px}
+.pill2{display:inline-flex;gap:5px;align-items:center;font-size:11px;font-weight:600;background:var(--cb);color:var(--c);border-radius:999px;padding:1px 8px}
+.mmlegd{width:10px;height:10px;background:var(--h1);transform:rotate(45deg);display:inline-block}
+.mmlegd.priv{background:transparent;border:1.5px dashed var(--h1)}
+.lline{width:20px;height:0;border-top:1.6px dashed var(--muted);display:inline-block}
+.lline.ilink{border-top:2px dotted var(--wine)}
 @media (max-width:1100px){.summary{grid-template-columns:repeat(3,minmax(0,1fr))}.overall{grid-column:1/-1}}
 @media (max-width:760px){
   .ov{grid-template-columns:minmax(0,1fr)}
@@ -255,6 +322,8 @@ textarea.json{width:100%;min-height:160px;font-family:ui-monospace,Menlo,monospa
       <button role="tab" id="tab-board" data-view="board" aria-selected="false">Board</button>
       <button role="tab" id="tab-list" data-view="list" aria-selected="false">List</button>
       <button role="tab" id="tab-overview" data-view="overview" aria-selected="false">Overview</button>
+      <button role="tab" id="tab-ideas" data-view="ideas" aria-selected="false">Ideas</button>
+      <button role="tab" id="tab-mindmap" data-view="mindmap" aria-selected="false">Mind map</button>
     </div>
     <input type="search" id="fq" placeholder="Search steps" aria-label="Search steps">
     <select id="fpri" aria-label="Filter by priority"><option value="">Any priority</option></select>
@@ -379,14 +448,15 @@ function FbStore(api){const F_=api.fs, db=api.db;
 }
 window.RTA_START=function(api){
   fbApi=api;
-  if(!api){store=LocalStore;mode="local";setMode();store.start(onData);return;}
+  if(!api){store=LocalStore;mode="local";setMode();myUid="local";me=me||"You";store.start(onData);unsubIdeas=LocalStore.startIdeas(myUid,onIdeas);return;}
   api.onAuth(u=>{
     fbUser=u;renderAuth();
-    if(unsub){unsub();unsub=null;}
+    if(unsub){unsub();unsub=null;}if(unsubIdeas){unsubIdeas();unsubIdeas=null;}ideas={};
     if(!u){ready=false;tasks={};mode="signedout";setMode();showSignIn();return;}
-    me=u.displayName||u.email;store=FbStore(api);mode="live";setMode();
+    me=u.displayName||u.email;myUid=u.uid;store=addFbIdeas(FbStore(api),api);mode="live";setMode();
     $("#view").innerHTML='<div class="loading">Loading the tracker…</div>';
     unsub=store.start(onData,e=>{if(e&&e.code==="permission-denied")showDenied(u.email);else toast("Live updates stopped. Reload the page to reconnect.");});
+    unsubIdeas=store.startIdeas(u.uid,onIdeas,e=>{toast(e&&e.code==="permission-denied"?"Ideas are blocked by the Firestore rules. Publish the updated rules.":"Ideas stopped updating. Reload the page.");});
   });
 };
 function renderAuth(){const b=$("#authbox");if(!b)return;
@@ -444,6 +514,7 @@ function render(){
   if(!ready)return;
   renderSummary();
   $$(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===view));
+  if(view==="ideas"||view==="mindmap"){$("#resultnote").textContent="";$("#legend").hidden=true;(view==="ideas"?renderIdeas:renderMindmap)();return;}
   const shown=all().filter(matches).length, total=all().length;
   $("#resultnote").textContent=anyFilter()?`Showing ${shown} of ${total} steps`:"";
   $("#legend").hidden=view==="overview";
@@ -613,13 +684,246 @@ function parseImport(txt){const d=JSON.parse(txt);const ts=Array.isArray(d)?d:d.
   return {config:normCfg(d.config||config),tasks:ts.map(t=>norm(Object.assign({},t,{id:(typeof t.id==="string"&&/^[A-Za-z0-9_.~:@+-]{1,100}$/.test(t.id))?t.id:uid()})))};}
 function exportData(){return JSON.stringify({config,tasks:all().sort(byPri)},null,2);}
 
+// ---------- ideas ----------
+const ISTATUS=[["new","New"],["exploring","Exploring"],["adopted","Adopted"],["parked","Parked"]];
+const ISLABEL=Object.fromEntries(ISTATUS);
+let ideas={}, myUid=null, unsubIdeas=null;
+let IF={who:"all",cat:"",sort:"new"};
+let ideaOpen=false, ideaId=null, ideaDraft=null, ideaConfirm=false, ideaDepQ="";
+function normIdea(i){return {id:i.id,title:i.title||"Untitled idea",body:i.body||"",category:i.category||"",tags:Array.isArray(i.tags)?i.tags.filter(x=>typeof x==="string"):[],status:ISLABEL[i.status]?i.status:"new",visibility:i.visibility==="private"?"private":"team",ownerUid:i.ownerUid||"",ownerName:i.ownerName||"",likes:Array.isArray(i.likes)?i.likes:[],linkedTasks:Array.isArray(i.linkedTasks)?i.linkedTasks:[],createdAt:i.createdAt||"",updatedAt:i.updatedAt||""};}
+const allIdeas=()=>Object.values(ideas);
+const isMine=i=>i.ownerUid&&i.ownerUid===myUid;
+function onIdeas(map){ideas=map;if(ready&&(view==="ideas"||view==="mindmap"))render();if(ideaOpen&&ideaId&&!ideaDraftDirty)renderIdea();}
+let ideaDraftDirty=false;
+
+LocalStore.startIdeas=function(u,cb){let m={};try{m=JSON.parse(localStorage.getItem("rta-tracker:ideas")||"{}");}catch(e){}this.ideaMem=m;this.ideaCb=cb;
+  cb(Object.fromEntries(Object.values(m).map(i=>[i.id,normIdea(i)])));return ()=>{};};
+LocalStore.pushIdeas=function(){try{localStorage.setItem("rta-tracker:ideas",JSON.stringify(this.ideaMem));}catch(e){}this.ideaCb&&this.ideaCb(Object.fromEntries(Object.values(this.ideaMem).map(i=>[i.id,normIdea(i)])));};
+LocalStore.saveIdea=async function(i){this.ideaMem[i.id]=i;this.pushIdeas();};
+LocalStore.deleteIdea=async function(id){delete this.ideaMem[id];this.pushIdeas();};
+LocalStore.toggleLike=async function(id,on){const i=this.ideaMem[id];if(!i)return;const l=new Set(i.likes||[]);on?l.add(myUid):l.delete(myUid);i.likes=[...l];this.pushIdeas();};
+function addFbIdeas(st,api){const F_=api.fs,db=api.db;
+  st.startIdeas=function(u,cb,onErr){let a=[],b=[];const fire=()=>{const m={};[...a,...b].forEach(d=>{m[d.id]=d;});cb(m);};
+    const col=F_.collection(db,"ideas");
+    const u1=F_.onSnapshot(F_.query(col,F_.where("visibility","==","team")),s=>{a=s.docs.map(d=>normIdea(Object.assign({},d.data(),{id:d.id})));fire();},onErr);
+    const u2=F_.onSnapshot(F_.query(col,F_.where("ownerUid","==",u)),s=>{b=s.docs.map(d=>normIdea(Object.assign({},d.data(),{id:d.id})));fire();},onErr);
+    return ()=>{u1();u2();};};
+  st.saveIdea=async function(i){const b=Object.assign({},i);delete b.id;await F_.setDoc(F_.doc(db,"ideas",i.id),b);};
+  st.deleteIdea=async function(id){await F_.deleteDoc(F_.doc(db,"ideas",id));};
+  st.toggleLike=async function(id,on){await F_.updateDoc(F_.doc(db,"ideas",id),{likes:on?F_.arrayUnion(myUid):F_.arrayRemove(myUid)});};
+  return st;}
+
+function ideaMatches(i){
+  if(IF.who==="team"&&i.visibility!=="team")return false;
+  if(IF.who==="private"&&i.visibility!=="private")return false;
+  if(IF.who==="mine"&&!isMine(i))return false;
+  if(IF.cat&&(i.category||"")!==IF.cat)return false;
+  if(F.q){const h=(i.title+" "+i.body+" "+i.tags.join(" ")+" "+i.ownerName).toLowerCase();if(!h.includes(F.q.toLowerCase()))return false;}
+  return true;}
+const catName=c=>c?laneName(c):"General";
+function fmtWhen(iso){return iso?fmtDate(iso.slice(0,10))+" "+iso.slice(0,4):"";}
+function renderIdeas(){
+  const list=allIdeas().filter(ideaMatches).sort((a,b)=>IF.sort==="liked"?(b.likes.length-a.likes.length)||b.createdAt.localeCompare(a.createdAt):b.createdAt.localeCompare(a.createdAt));
+  const counts={all:allIdeas().length,team:allIdeas().filter(i=>i.visibility==="team").length,private:allIdeas().filter(i=>i.visibility==="private").length,mine:allIdeas().filter(isMine).length};
+  const seg=(k,l)=>`<button data-if="${k}" aria-pressed="${IF.who===k}">${l} <span class="c">${counts[k]}</span></button>`;
+  const local=store===LocalStore;
+  $("#view").innerHTML=`<div class="ideahead">
+    <div><h2>Idea board</h2><p class="help">Drop ideas as they come. Share them with the team, or keep them to yourself until they're ready.${local?" In this browser-only copy, “Only me” and “Team” are labels; nothing is shared.":""}</p></div>
+    <button class="btn primary" data-act="newidea">+ New idea</button></div>
+   <div class="ideabar"><div class="seg ifseg" role="group" aria-label="Show ideas">${seg("all","All")}${seg("team","Team")}${seg("private","Only me")}${seg("mine","Mine")}</div>
+    <select id="icat" aria-label="Category"><option value="">All categories</option><option value="__general"${IF.cat==="__general"?" selected":""}>General</option>${config.lanes.map(l=>`<option value="${esc(l.id)}"${IF.cat===l.id?" selected":""}>${esc(l.name)}</option>`).join("")}</select>
+    <select id="isort" aria-label="Sort ideas"><option value="new"${IF.sort==="new"?" selected":""}>Newest first</option><option value="liked"${IF.sort==="liked"?" selected":""}>Most liked</option></select></div>
+   ${list.length?`<div class="ideagrid">${list.map(ideaCard).join("")}</div>`:`<div class="emptystate"><h2>${allIdeas().length?"No ideas match":"No ideas yet"}</h2><p class="help">${allIdeas().length?"Change the filters or search.":"Add the first one: a story, a weave, a supplier lead, a campaign thought."}</p><button class="btn primary" data-act="newidea">+ New idea</button></div>`}`;
+}
+function ideaCard(i){const liked=i.likes.includes(myUid);
+  return `<article class="icard${i.visibility==="private"?" priv":""}" data-idea="${esc(i.id)}" tabindex="0" aria-label="${esc(i.title)}">
+   <div class="itop"><span class="icat">${esc(catName(i.category))}</span><span class="ist is-${i.status}">${ISLABEL[i.status]}</span></div>
+   <h3>${esc(i.title)}</h3>${i.body?`<p>${esc(i.body.length>220?i.body.slice(0,220)+"…":i.body)}</p>`:""}
+   ${i.tags.length?`<div class="itags">${i.tags.map(t=>`<span>#${esc(t)}</span>`).join("")}</div>`:""}
+   <div class="ifoot"><span class="who">${esc(i.ownerName||"Someone")} · ${esc(fmtWhen(i.createdAt))}</span>
+    <span class="iacts">${i.visibility==="private"?'<span class="vis">Only you</span>':'<span class="vis team">Team</span>'}${i.linkedTasks.length?`<span class="vis">${i.linkedTasks.length} step${i.linkedTasks.length>1?"s":""}</span>`:""}
+    ${i.visibility==="team"?`<button class="like${liked?" on":""}" data-like="${esc(i.id)}" aria-pressed="${liked}" aria-label="${liked?"Unlike":"Like"}">♥ ${i.likes.length}</button>`:""}</span></div>
+  </article>`;}
+
+function openIdea(id,preset){ideaOpen=true;ideaId=id||null;ideaConfirm=false;ideaDepQ="";ideaDraftDirty=!id;
+  ideaDraft=id?JSON.parse(JSON.stringify(ideas[id])):normIdea(Object.assign({id:uid("i"),visibility:"team",ownerUid:myUid,ownerName:me||"",createdAt:new Date().toISOString()},preset||{}));
+  renderIdea();setTimeout(()=>{const f=$("#i-title");f&&!id&&f.focus();},30);}
+function closeIdea(){ideaOpen=false;ideaId=null;ideaDraft=null;$("#overlay").innerHTML="";render();}
+function renderIdea(){if(!ideaOpen)return;
+  if(ideaId&&ideas[ideaId]&&!ideaDraftDirty)ideaDraft=JSON.parse(JSON.stringify(ideas[ideaId]));
+  const i=ideaDraft, isNew=!ideaId, own=isNew||isMine(i), ro=own?"":" disabled";
+  const steps=all().filter(t=>!ideaDepQ||t.title.toLowerCase().includes(ideaDepQ.toLowerCase())).sort(byPri);
+  const liked=i.likes.includes(myUid);
+  $("#overlay").innerHTML=`<div class="scrim" data-act="closeidea"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="${isNew?"New idea":"Idea"}">
+   <div class="dhead"><div class="eyebrow">${isNew?"New idea":esc((i.ownerName||"Someone")+" · "+fmtWhen(i.createdAt))}</div><button class="btn small" data-act="closeidea">Close</button></div>
+   <div class="dbody">
+    <div class="field"><label for="i-title">Idea</label><input id="i-title" class="titlein" value="${esc(i.title==="Untitled idea"&&isNew?"":i.title)}" placeholder="Name the idea"${ro}></div>
+    <div class="field"><span class="flabel">Who can see it</span><div class="seg" role="group" aria-label="Visibility">
+      <button data-iset="visibility" data-v="team" aria-pressed="${i.visibility==="team"}"${ro}>Team</button>
+      <button data-iset="visibility" data-v="private" aria-pressed="${i.visibility==="private"}"${ro}>Only me</button></div>
+      <span class="help">${i.visibility==="private"?"Only you can see this idea. Switch to Team when you want to share it.":"Everyone on the team can see and like this idea. Only you can edit it."}</span></div>
+    <div class="field"><label for="i-body">Details</label><textarea id="i-body" rows="6" placeholder="What is it, why does it matter, what would we need?"${ro}>${esc(i.body)}</textarea></div>
+    <div class="grid2">
+     <div class="field"><label for="i-cat">Category</label><select id="i-cat"${ro}><option value="">General</option>${config.lanes.map(l=>`<option value="${esc(l.id)}"${l.id===i.category?" selected":""}>${esc(l.name)}</option>`).join("")}</select></div>
+     <div class="field"><label for="i-tags">Tags</label><input id="i-tags" value="${esc(i.tags.join(", "))}" placeholder="weave, campaign, supplier"${ro}></div>
+    </div>
+    <div class="field"><span class="flabel">Stage of the idea</span><div class="seg" role="group" aria-label="Idea status">${ISTATUS.map(([k,l])=>`<button class="is-${k}" data-iset="status" data-v="${k}" aria-pressed="${i.status===k}"${ro}>${l}</button>`).join("")}</div></div>
+    <div class="field"><label for="i-depq">Connected steps</label><input id="i-depq" placeholder="Find a step" value="${esc(ideaDepQ)}"${ro}>
+     <div class="deps">${steps.map(t=>`<label><input type="checkbox" data-ilink="${esc(t.id)}"${i.linkedTasks.includes(t.id)?" checked":""}${ro}><span>${esc(t.title)}<br><small>${esc(laneName(t.lane))} · ${SLABEL[t.status]}</small></span></label>`).join("")||'<div class="empty">No steps yet.</div>'}</div></div>
+    ${!isNew&&i.visibility==="team"?`<div><button class="like${liked?" on":""}" data-like="${esc(i.id)}" aria-pressed="${liked}">♥ ${i.likes.length} ${i.likes.length===1?"like":"likes"}</button></div>`:""}
+    ${!own?'<p class="help">This is a teammate’s idea, so only they can edit it. You can like it or turn it into a step.</p>':""}
+    ${ideaConfirm?`<div class="confirmbox"><b>Delete “${esc(i.title)}”?</b><span class="help">This can't be undone.</span><div class="actions"><button class="btn danger" data-act="ideareallydelete">Delete idea</button><button class="btn" data-act="ideacanceldelete">Keep it</button></div></div>`:""}
+   </div>
+   <div class="dfoot"><div class="actions">${!isNew&&own?'<button class="btn danger" data-act="ideadelete">Delete</button>':""}${!isNew?'<button class="btn" data-act="idea2step">Turn into a step</button>':""}</div>
+    <div class="actions"><button class="btn" data-act="closeidea">${own?"Cancel":"Close"}</button>${own?`<button class="btn primary" data-act="ideasave">${isNew?"Add idea":"Save changes"}</button>`:""}</div></div>
+  </aside>`;
+}
+function readIdeaForm(){const i=ideaDraft;if(!i)return;const v=id=>{const e=$("#"+id);return e?e.value:undefined;};
+  if(v("i-title")!==undefined)i.title=v("i-title").trim();
+  if(v("i-body")!==undefined)i.body=v("i-body").trim();
+  if(v("i-cat")!==undefined)i.category=v("i-cat");
+  if(v("i-tags")!==undefined)i.tags=v("i-tags").split(",").map(s=>s.trim().replace(/^#/,"")).filter(Boolean).slice(0,12);}
+async function ideaWrite(fn,msg){try{await fn();if(msg)toast(msg);return true;}catch(e){
+  toast(e&&e.code==="permission-denied"?"That wasn't allowed. Check the Firestore rules were updated for ideas.":"That didn't save. Check your connection and try again.");return false;}}
+async function ideaClick(e){
+  const lk=e.target.closest("[data-like]"); if(lk){e.stopPropagation();const i=ideas[lk.dataset.like];if(!i)return true;const on=!i.likes.includes(myUid);
+    await ideaWrite(()=>store.toggleLike(i.id,on));if(ideaOpen){ideaDraft.likes=on?[...ideaDraft.likes,myUid]:ideaDraft.likes.filter(x=>x!==myUid);renderIdea();}return true;}
+  const ifb=e.target.closest("[data-if]"); if(ifb){IF.who=ifb.dataset.if;renderIdeas();return true;}
+  const card=e.target.closest("[data-idea]"); if(card){openIdea(card.dataset.idea);return true;}
+  const is=e.target.closest("[data-iset]"); if(is&&ideaDraft){readIdeaForm();ideaDraft[is.dataset.iset]=is.dataset.v;ideaDraftDirty=true;renderIdea();return true;}
+  const a=e.target.closest("[data-act]"); if(!a)return false;
+  const act=a.dataset.act;
+  if(act==="newidea"){openIdea(null);return true;}
+  if(act==="closeidea"){closeIdea();return true;}
+  if(act==="ideasave"){readIdeaForm();const i=ideaDraft;if(!i.title){toast("Give the idea a name first.");return true;}
+    i.updatedAt=new Date().toISOString();if(!i.ownerUid)i.ownerUid=myUid;if(!i.ownerName)i.ownerName=me||"";
+    if(ideaId&&ideas[ideaId])i.likes=ideas[ideaId].likes;
+    if(await ideaWrite(()=>store.saveIdea(i),ideaId?"Saved":"Idea added")){ideaDraftDirty=false;closeIdea();}return true;}
+  if(act==="ideadelete"){readIdeaForm();ideaConfirm=true;renderIdea();return true;}
+  if(act==="ideacanceldelete"){ideaConfirm=false;renderIdea();return true;}
+  if(act==="ideareallydelete"){const id=ideaId;if(await ideaWrite(()=>store.deleteIdea(id),"Idea deleted"))closeIdea();return true;}
+  if(act==="idea2step"){readIdeaForm();const i=ideaDraft;
+    const t=norm({id:uid(),title:i.title,what:i.body,lane:config.lanes.find(l=>l.id===i.category)?i.category:(config.lanes[0]&&config.lanes[0].id),stage:config.stages[0]&&config.stages[0].id,status:"todo",priority:2,order:Date.now(),
+      notes:[{id:uid("n"),at:new Date().toISOString(),by:me||"",text:"Created from the idea “"+i.title+"” by "+(i.ownerName||"a teammate")+"."}]});
+    const ok=await saveTask(t,"Step created");
+    if(ok&&isMine(i)){const u=Object.assign({},ideas[i.id]||i,{status:"adopted",linkedTasks:[...new Set([...(ideas[i.id]||i).linkedTasks,t.id])],updatedAt:new Date().toISOString()});await ideaWrite(()=>store.saveIdea(u));}
+    if(ok){ideaDraftDirty=false;closeIdea();openDrawer(t.id);}return true;}
+  return false;}
+function ideaChange(e){
+  if(e.target.id==="icat"){IF.cat=e.target.value;renderIdeas();return true;}
+  if(e.target.id==="isort"){IF.sort=e.target.value;renderIdeas();return true;}
+  const l=e.target.closest("[data-ilink]"); if(l&&ideaDraft){readIdeaForm();const id=l.dataset.ilink;ideaDraft.linkedTasks=l.checked?[...new Set([...ideaDraft.linkedTasks,id])]:ideaDraft.linkedTasks.filter(x=>x!==id);ideaDraftDirty=true;return true;}
+  if(e.target.closest(".drawer")&&ideaOpen){ideaDraftDirty=true;}
+  return false;}
+function ideaInput(e){
+  if(e.target.id==="i-depq"){ideaDepQ=e.target.value;readIdeaForm();const pos=e.target.selectionStart;renderIdea();const i=$("#i-depq");i.focus();i.setSelectionRange(pos,pos);return true;}
+  if(ideaOpen&&e.target.closest(".drawer"))ideaDraftDirty=true;
+  return false;}
+
+// ---------- mind map ----------
+const MM={group:pref.get("mmGroup","lane"),steps:true,ideas:true,deps:true,sel:null,k:1,x:0,y:0};
+function mmHubs(){
+  const t=all(), iv=allIdeas();
+  if(MM.group==="lane"){const h=config.lanes.map(l=>({id:"lane:"+l.id,name:l.name}));if(iv.some(i=>!config.lanes.find(l=>l.id===i.category))||t.some(x=>!config.lanes.find(l=>l.id===x.lane)))h.push({id:"lane:__general",name:"General"});return h;}
+  if(MM.group==="status"){return STATUSES.map(([k,l])=>({id:"status:"+k,name:l})).concat([{id:"ideas",name:"Ideas"}]);}
+  if(MM.group==="stage"){return config.stages.map(s=>({id:"stage:"+s.id,name:s.name})).concat([{id:"ideas",name:"Ideas"}]);}
+  if(MM.group==="owner"){const names=[...new Set([...t.map(x=>x.owner||"No owner"),...iv.map(i=>i.ownerName||"Someone")])];return names.map(n=>({id:"owner:"+n,name:n}));}
+  return [];}
+function mmHubOf(item){
+  if(item.type==="step"){const t=item.ref;
+    if(MM.group==="lane")return "lane:"+(config.lanes.find(l=>l.id===t.lane)?t.lane:"__general");
+    if(MM.group==="status")return "status:"+t.status;
+    if(MM.group==="stage")return "stage:"+(config.stages.find(s=>s.id===t.stage)?t.stage:config.stages[0].id);
+    return "owner:"+(t.owner||"No owner");}
+  const i=item.ref;
+  if(MM.group==="lane")return "lane:"+(config.lanes.find(l=>l.id===i.category)?i.category:"__general");
+  if(MM.group==="owner")return "owner:"+(i.ownerName||"Someone");
+  return "ideas";}
+function renderMindmap(){
+  const items=[];
+  if(MM.steps)all().sort(byPri).forEach(t=>items.push({key:"t:"+t.id,type:"step",ref:t,label:t.title}));
+  if(MM.ideas)allIdeas().sort((a,b)=>a.title.localeCompare(b.title)).forEach(i=>items.push({key:"i:"+i.id,type:"idea",ref:i,label:i.title}));
+  let hubs=mmHubs();items.forEach(it=>{it.hub=mmHubOf(it);});
+  hubs=hubs.filter(h=>items.some(it=>it.hub===h.id)||MM.group==="lane");
+  const GAP=2, slots=items.length+GAP*hubs.length||1, step=2*Math.PI/slots;
+  const R2=Math.max(330,slots*15/(2*Math.PI)), R1=Math.max(150,R2*0.46);
+  let cur=-Math.PI/2+step*GAP/2;const pos={};
+  hubs.forEach((h,hi)=>{const mem=items.filter(it=>it.hub===h.id);const start=cur;
+    mem.forEach((it,j)=>{const a=cur+step*(j+0.5);it.a=a;it.x=Math.cos(a)*R2;it.y=Math.sin(a)*R2;pos[it.key]=it;});
+    cur+=step*Math.max(mem.length,1);h.a=(start+cur)/2;h.x=Math.cos(h.a)*R1;h.y=Math.sin(h.a)*R1;h.c=MM.group==="status"&&h.id.startsWith("status:")?"var(--"+h.id.slice(7)+")":"var(--h"+(hi%8+1)+")";pos["h:"+h.id]=h;cur+=step*GAP;});
+  const hubById=Object.fromEntries(hubs.map(h=>[h.id,h]));MM.hubNames=Object.fromEntries(hubs.map(h=>["h:"+h.id,h.name]));
+  const q=F.q.toLowerCase();
+  const hit=it=>!q||it.label.toLowerCase().includes(q);
+  const cut=s=>s.length>30?s.slice(0,29).trimEnd()+"…":s;
+  let edges="",cross="",nodes="",labels="";
+  hubs.forEach(h=>{edges+=`<path class="mme" data-a="center" data-b="h:${esc(h.id)}" d="M0 0L${h.x.toFixed(1)} ${h.y.toFixed(1)}" stroke="${h.c}" stroke-width="2"/>`;});
+  items.forEach(it=>{const h=hubById[it.hub];if(!h)return;const mx=(h.x+it.x)/2*1.04,my=(h.y+it.y)/2*1.04;
+    edges+=`<path class="mme" data-a="h:${esc(h.id)}" data-b="${esc(it.key)}" d="M${h.x.toFixed(1)} ${h.y.toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${it.x.toFixed(1)} ${it.y.toFixed(1)}" stroke="${h.c}" stroke-opacity=".45"/>`;});
+  if(MM.deps){items.forEach(it=>{const links=it.type==="step"?it.ref.needs.map(n=>"t:"+n):it.ref.linkedTasks.map(n=>"t:"+n);
+    links.forEach(k=>{const o=pos[k];if(!o)return;const cls=it.type==="step"?"dep":"ilink";
+      cross+=`<path class="mme mmx ${cls}" data-a="${esc(it.key)}" data-b="${esc(k)}" d="M${o.x.toFixed(1)} ${o.y.toFixed(1)}Q${(o.x+it.x)*0.18} ${(o.y+it.y)*0.18} ${it.x.toFixed(1)} ${it.y.toFixed(1)}"/>`;});});}
+  hubs.forEach(h=>{const lx=Math.cos(h.a)*22,ly=Math.sin(h.a)*22,anc=Math.abs(Math.cos(h.a))<0.3?"middle":(Math.cos(h.a)<0?"end":"start");
+    nodes+=`<g class="mmn hub" data-k="h:${esc(h.id)}" transform="translate(${h.x.toFixed(1)} ${h.y.toFixed(1)})"><circle r="11" fill="${h.c}"/></g>`;
+    labels+=`<text class="mml hubl" x="${(h.x+lx).toFixed(1)}" y="${(h.y+ly).toFixed(1)}" dy=".35em" text-anchor="${anc}">${esc(h.name)} <tspan class="cnt">${items.filter(it=>it.hub===h.id).length}</tspan></text>`;});
+  items.forEach(it=>{const deg=it.a*180/Math.PI,left=Math.cos(it.a)<0,h=hubById[it.hub];const dim=hit(it)?"":" dim";
+    const shape=it.type==="step"?`<circle r="6.5" class="st st-${it.ref.status}"/>`:`<rect x="-6" y="-6" width="12" height="12" transform="rotate(45)" class="idn${it.ref.visibility==="private"?" priv":""}" style="--hc:${h?h.c:"var(--wine)"}"/>`;
+    nodes+=`<g class="mmn${dim}${it.type==="step"&&it.ref.fallback?" risk":""}" data-k="${esc(it.key)}" transform="translate(${it.x.toFixed(1)} ${it.y.toFixed(1)})" tabindex="0" role="button" aria-label="${esc(it.label)}">${shape}<text class="mml" transform="rotate(${left?deg+180:deg})" x="${left?-12:12}" dy=".35em" text-anchor="${left?"end":"start"}">${esc(cut(it.label))}</text></g>`;});
+  const ext=R2+175;
+  const grp=[["lane","Workstream"],["status","Status"],["stage","Stage"],["owner","Owner"]];
+  $("#view").innerHTML=`<div class="mmbar"><div class="seg" role="group" aria-label="Group by"><span class="flabel" style="align-self:center;margin-right:4px">Group by</span>${grp.map(([k,l])=>`<button data-mmg="${k}" aria-pressed="${MM.group===k}">${l}</button>`).join("")}</div>
+    <div class="seg" role="group" aria-label="Show">${[["steps","Steps"],["ideas","Ideas"],["deps","Connections"]].map(([k,l])=>`<button data-mmt="${k}" aria-pressed="${MM[k]}">${l}</button>`).join("")}</div>
+    <span class="help">${items.filter(i=>i.type==="step").length} steps · ${items.filter(i=>i.type==="idea").length} ideas · ${hubs.length} groups</span></div>
+   <div class="mmwrap" id="mmwrap"><svg id="mmsvg" viewBox="${-ext} ${-ext} ${2*ext} ${2*ext}" role="img" aria-label="Mind map of steps and ideas, grouped by ${grp.find(g=>g[0]===MM.group)[1].toLowerCase()}">
+     <g id="mmroot" transform="translate(${MM.x} ${MM.y}) scale(${MM.k})">${edges}${cross}<g class="mmn center" data-k="center"><circle r="34" fill="var(--wine)"/><text class="mmc" dy=".35em" text-anchor="middle">Ṛta</text></g>${nodes}${labels}</g></svg>
+    <div class="mmzoom"><button class="ibtn" data-mmz="in" aria-label="Zoom in">+</button><button class="ibtn" data-mmz="out" aria-label="Zoom out">−</button><button class="ibtn" data-mmz="fit" aria-label="Reset view">⤢</button></div>
+    <div class="mminfo" id="mminfo" hidden></div></div>
+   <div class="legend"><span><i class="dot st-done"></i>Step, coloured by status</span><span><i class="mmlegd"></i>Idea</span><span><i class="mmlegd priv"></i>Private idea (only you)</span><span><i class="lline dep"></i>Needs</span><span><i class="lline ilink"></i>Idea connected to a step</span><span><i class="rbar"></i>Falling back</span></div>`;
+  mmWire();if(MM.sel)mmSelect(MM.sel);
+}
+function mmNeighbors(k){const s=new Set([k]);$$("#mmsvg .mme").forEach(p=>{if(p.dataset.a===k)s.add(p.dataset.b);if(p.dataset.b===k)s.add(p.dataset.a);});return s;}
+function mmFocus(k){const svg=$("#mmsvg");if(!svg)return;if(!k){svg.classList.remove("focus");$$("#mmsvg .on").forEach(x=>x.classList.remove("on"));return;}
+  const nb=mmNeighbors(k);svg.classList.add("focus");$$("#mmsvg .mmn").forEach(n=>n.classList.toggle("on",nb.has(n.dataset.k)));$$("#mmsvg .mme").forEach(p=>p.classList.toggle("on",p.dataset.a===k||p.dataset.b===k));}
+function mmSelect(k){MM.sel=k;mmFocus(k);const box=$("#mminfo");if(!box)return;if(!k||k==="center"){box.hidden=true;return;}
+  let h="";
+  if(k.startsWith("t:")){const t=tasks[k.slice(2)];if(!t){box.hidden=true;return;}
+    const linkedIdeas=allIdeas().filter(i=>i.linkedTasks.includes(t.id));
+    h=`<div class="eyebrow">Step · ${esc(laneName(t.lane))}</div><h3>${esc(t.title)}</h3><div class="meta" style="padding-left:0"><span class="pill2 st-${t.status}"><i class="dot"></i>${SLABEL[t.status]}</span>${metaHTML(t)}</div>${t.fallback?`<p class="fb">${esc(t.fallback)}</p>`:t.what?`<p>${esc(t.what)}</p>`:""}
+     ${t.needs.length?`<div class="flabel">Needs</div><div class="chips">${t.needs.filter(n=>tasks[n]).map(n=>`<button class="chip" data-mmgo="t:${esc(n)}">${esc(tasks[n].title)}</button>`).join("")}</div>`:""}
+     ${linkedIdeas.length?`<div class="flabel">Ideas</div><div class="chips">${linkedIdeas.map(i=>`<button class="chip" data-mmgo="i:${esc(i.id)}">${esc(i.title)}</button>`).join("")}</div>`:""}
+     <button class="btn small primary" data-open="${esc(t.id)}">Open step</button>`;}
+  else if(k.startsWith("i:")){const i=ideas[k.slice(2)];if(!i){box.hidden=true;return;}
+    h=`<div class="eyebrow">Idea · ${esc(catName(i.category))} · ${i.visibility==="private"?"Only you":"Team"}</div><h3>${esc(i.title)}</h3><p>${esc(i.body.slice(0,200))}${i.body.length>200?"…":""}</p><div class="who">${esc(i.ownerName||"Someone")} · ${ISLABEL[i.status]} · ♥ ${i.likes.length}</div>
+     ${i.linkedTasks.length?`<div class="flabel">Connected steps</div><div class="chips">${i.linkedTasks.filter(n=>tasks[n]).map(n=>`<button class="chip" data-mmgo="t:${esc(n)}">${esc(tasks[n].title)}</button>`).join("")}</div>`:""}
+     <button class="btn small primary" data-idea="${esc(i.id)}">Open idea</button>`;}
+  else if(k.startsWith("h:")){const n=$$("#mmsvg .mme").filter(p=>p.dataset.a===k).length;h=`<div class="eyebrow">Group</div><h3>${esc((MM.hubNames||{})[k]||"")}</h3><p class="help">${n} item${n===1?"":"s"} in this group. Click one to see how it connects.</p>`;}
+  box.innerHTML=`<button class="ibtn mmx-close" data-mmclose aria-label="Close">✕</button>`+h;box.hidden=false;}
+function mmApply(){const r=$("#mmroot");if(r)r.setAttribute("transform",`translate(${MM.x} ${MM.y}) scale(${MM.k})`);}
+function mmWire(){const svg=$("#mmsvg");if(!svg)return;let drag=null,moved=false;
+  const toSvg=(cx,cy)=>{const p=svg.createSVGPoint();p.x=cx;p.y=cy;return p.matrixTransform(svg.getScreenCTM().inverse());};
+  svg.addEventListener("wheel",e=>{e.preventDefault();const p=toSvg(e.clientX,e.clientY);const f=e.deltaY<0?1.15:1/1.15;const k=Math.min(4,Math.max(0.35,MM.k*f));MM.x=p.x-(p.x-MM.x)*(k/MM.k);MM.y=p.y-(p.y-MM.y)*(k/MM.k);MM.k=k;mmApply();},{passive:false});
+  svg.addEventListener("pointerdown",e=>{if(e.target.closest(".mmn"))return;drag={x:e.clientX,y:e.clientY,ox:MM.x,oy:MM.y};moved=false;svg.setPointerCapture(e.pointerId);});
+  svg.addEventListener("pointermove",e=>{if(drag){const a=toSvg(drag.x,drag.y),b=toSvg(e.clientX,e.clientY);MM.x=drag.ox+(b.x-a.x);MM.y=drag.oy+(b.y-a.y);if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>3)moved=true;mmApply();return;}
+    const n=e.target.closest(".mmn");if(!MM.sel)mmFocus(n?n.dataset.k:null);});
+  svg.addEventListener("pointerup",e=>{if(drag&&!moved){mmSelect(null);}drag=null;});
+  svg.addEventListener("pointerleave",()=>{if(!MM.sel)mmFocus(null);});
+  svg.addEventListener("click",e=>{const n=e.target.closest(".mmn");if(n){e.stopPropagation();mmSelect(n.dataset.k);}});
+  svg.addEventListener("keydown",e=>{const n=e.target.closest(".mmn");if(n&&(e.key==="Enter"||e.key===" ")){e.preventDefault();mmSelect(n.dataset.k);}});}
+function mmClick(e){
+  const g=e.target.closest("[data-mmg]"); if(g){MM.group=g.dataset.mmg;pref.set("mmGroup",MM.group);MM.sel=null;renderMindmap();return true;}
+  const t=e.target.closest("[data-mmt]"); if(t){MM[t.dataset.mmt]=!MM[t.dataset.mmt];MM.sel=null;renderMindmap();return true;}
+  const z=e.target.closest("[data-mmz]"); if(z){const d=z.dataset.mmz;if(d==="fit"){MM.k=1;MM.x=0;MM.y=0;}else{MM.k=Math.min(4,Math.max(0.35,MM.k*(d==="in"?1.25:0.8)));}mmApply();return true;}
+  const go=e.target.closest("[data-mmgo]"); if(go){mmSelect(go.dataset.mmgo);return true;}
+  if(e.target.closest("[data-mmclose]")){mmSelect(null);return true;}
+  return false;}
+
 // ---------- toast ----------
 let tt;function toast(m){$("#toastbox").innerHTML=`<div class="toast">${esc(m)}</div>`;clearTimeout(tt);tt=setTimeout(()=>{$("#toastbox").innerHTML="";},2600);}
 
 // ---------- events ----------
 document.addEventListener("click",async e=>{
   const a=e.target.closest("[data-act]");
-  const tile=e.target.closest("[data-sf]"); if(tile){F.status=F.status===tile.dataset.sf?"":tile.dataset.sf; if(view==="overview")view="list"; render(); return;}
+  if(await ideaClick(e))return; if(mmClick(e))return;
+  const tile=e.target.closest("[data-sf]"); if(tile){F.status=F.status===tile.dataset.sf?"":tile.dataset.sf; if(["overview","ideas","mindmap"].includes(view))view="list"; render(); return;}
   const tab=e.target.closest(".tabs [data-view]"); if(tab){view=tab.dataset.view;pref.set("view",view);render();return;}
   const sortTh=e.target.closest("th[data-sort]"); if(sortTh){const k=sortTh.dataset.sort;sortDir=sortKey===k?-sortDir:1;sortKey=k;pref.set("sortKey",k);pref.set("sortDir",sortDir);renderList();return;}
   if(e.target.closest("select[data-inline]"))return;
@@ -670,6 +974,7 @@ document.addEventListener("click",async e=>{
   else if(act==="reallyreset"){const s=JSON.parse(JSON.stringify(window.RTA_SEED));const ok=await write(()=>store.replaceAll(normCfg(s.config),s.tasks.map(norm)),"Reset to the starter plan");if(ok)closeSettings();}
 });
 document.addEventListener("change",async e=>{
+  if(ideaChange(e))return;
   const sel=e.target.closest("select[data-inline]"); if(sel){const t=Object.assign({},tasks[sel.dataset.tid]);t[sel.dataset.inline]=sel.dataset.inline==="priority"?Number(sel.value):sel.value;await saveTask(t,"Saved");return;}
   const dep=e.target.closest("[data-dep]"); if(dep&&draft){readForm();const id=dep.dataset.dep;draft.needs=dep.checked?[...new Set([...draft.needs,id])]:draft.needs.filter(x=>x!==id);dirty=true;return;}
   if(e.target.id==="m-file"){const f=e.target.files&&e.target.files[0];if(!f)return;try{$("#m-json").value=await f.text();}catch(err){toast("Couldn't read that file.");}return;}
@@ -677,14 +982,16 @@ document.addEventListener("change",async e=>{
   if(e.target.id==="fpri"){F.pri=e.target.value;render();} if(e.target.id==="fown"){F.own=e.target.value;render();} if(e.target.id==="flane"){F.lane=e.target.value;render();} if(e.target.id==="frisk"){F.risk=e.target.checked;render();}
 });
 document.addEventListener("input",e=>{
+  if(ideaInput(e))return;
   if(e.target.id==="fq"){F.q=e.target.value;clearTimeout(window._fq);window._fq=setTimeout(render,150);}
   if(e.target.closest(".drawer")&&e.target.id!=="d-depq"&&e.target.id!=="d-note")dirty=true;
   if(e.target.id==="d-depq"){depQ=e.target.value;readForm();const pos=e.target.selectionStart;renderDrawer();const i=$("#d-depq");i.focus();i.setSelectionRange(pos,pos);}
 });
 document.addEventListener("keydown",e=>{
-  if(e.key==="Escape"){if(drawerOpen)closeDrawer();else if(mdraft)closeSettings();}
+  if(e.key==="Escape"){if(ideaOpen)closeIdea();else if(drawerOpen)closeDrawer();else if(mdraft)closeSettings();}
   if((e.key==="Enter")&&e.target.id==="d-note"){e.preventDefault();document.querySelector('[data-act="addnote"]').click();}
   if((e.key==="Enter"||e.key===" ")&&e.target.matches("th[data-sort]")){e.preventDefault();e.target.click();}
+  if((e.key==="Enter")&&e.target.matches(".icard")){e.preventDefault();openIdea(e.target.dataset.idea);}
 });
 $("#newbtn").addEventListener("click",()=>openDrawer(null));
 $("#setbtn").addEventListener("click",()=>openSettings("lanes"));
