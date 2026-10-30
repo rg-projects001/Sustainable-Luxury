@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ṛta Progress Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+Telugu:wght@400;600&display=swap">
+<style>
+html,body{margin:0}
+
+/* Palette: beige and forest green. Layout: a loom ledger. Workstreams are warp lanes, stages are weft; every step is a knot you can pick up, move and retie. */
+:root{
+  --bg:#F2ECDF; --surface:#FBF8F1; --ink:#1E2A21; --muted:#5E665A; --line:#DCD2BF; --wash:#E9E1D0; --shade:rgba(30,42,33,.35);
+  --wine:#264733; --wine-ink:#FBF8F1; --wine-soft:#DCE6D6;
+  --done:#3E7A4C; --done-bg:#DFEBD8; --prog:#946A1E; --prog-bg:#F3E6CB; --open:#5F5290; --open-bg:#E7E3F0;
+  --block:#A4532A; --block-bg:#F4E1D3; --todo:#857E6E; --todo-bg:#EEE8DB; --risk:#AE3326; --risk-bg:#F6DED7;
+  --display:"Cormorant Garamond","Iowan Old Style",Georgia,serif;
+  --ui:"IBM Plex Sans","Noto Sans Telugu",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141813; --surface:#1C211B; --ink:#EEE8DA; --muted:#A8AC9C; --line:#323A2F; --wash:#222920; --shade:rgba(0,0,0,.55);
+  --wine:#A9CDA9; --wine-ink:#132016; --wine-soft:#22342A;
+  --done:#86C48F; --done-bg:#1E2F22; --prog:#E0B36A; --prog-bg:#33291A; --open:#B4A8DE; --open-bg:#262338;
+  --block:#EBA07C; --block-bg:#38261B; --todo:#A4A091; --todo-bg:#23281F; --risk:#F08A80; --risk-bg:#3A1F1A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141813; --surface:#1C211B; --ink:#EEE8DA; --muted:#A8AC9C; --line:#323A2F; --wash:#222920; --shade:rgba(0,0,0,.55);
+  --wine:#A9CDA9; --wine-ink:#132016; --wine-soft:#22342A;
+  --done:#86C48F; --done-bg:#1E2F22; --prog:#E0B36A; --prog-bg:#33291A; --open:#B4A8DE; --open-bg:#262338;
+  --block:#EBA07C; --block-bg:#38261B; --todo:#A4A091; --todo-bg:#23281F; --risk:#F08A80; --risk-bg:#3A1F1A; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:14px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--wine);outline-offset:2px}
+.wrap{max-width:1360px;margin:0 auto;padding-block:22px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;color:var(--wine);text-wrap:balance}
+.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:500}
+
+header.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line)}
+header.top h1{font-size:clamp(32px,4.5vw,46px);line-height:1}
+.mode{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:6px}
+.mode i{width:8px;height:8px;border-radius:50%;background:var(--todo)}
+.mode.live i{background:var(--done)} .mode.local i{background:var(--prog)} .mode.ro i{background:var(--open)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:8px 13px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--muted)}
+a.btn{text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--wine);border-color:var(--wine);color:var(--wine-ink)}
+.btn.danger{color:var(--risk);border-color:var(--risk)}
+.btn.small{padding:5px 10px;font-size:12.5px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.ro-only{display:none}
+body.readonly .edit-only{display:none!important}
+body.readonly .ro-only{display:block}
+
+.summary{display:grid;grid-template-columns:minmax(220px,1.2fr) repeat(6,minmax(0,1fr));gap:10px;margin:18px 0 14px}
+.overall{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.overall .big{font-family:var(--display);font-size:34px;font-weight:600;line-height:1;color:var(--wine);font-variant-numeric:tabular-nums}
+.overall .sub{font-size:12px;color:var(--muted)}
+.bar{height:6px;background:var(--wash);border-radius:3px;overflow:hidden;display:flex}
+.bar span{height:100%}
+.tile{font:inherit;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:3px;min-width:0}
+.tile:hover{border-color:var(--muted)}
+.tile[aria-pressed="true"]{outline:2px solid var(--wine);outline-offset:1px}
+.tile .n{font-family:var(--display);font-size:28px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.tile .l{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.st-done{--c:var(--done);--cb:var(--done-bg)} .st-prog{--c:var(--prog);--cb:var(--prog-bg)} .st-open{--c:var(--open);--cb:var(--open-bg)}
+.st-block{--c:var(--block);--cb:var(--block-bg)} .st-todo{--c:var(--todo);--cb:var(--todo-bg)} .st-risk{--c:var(--risk);--cb:var(--risk-bg)}
+.dot{background:var(--c)} .st-todo .dot,.dot.st-todo{background:transparent;border:1.5px solid var(--todo)}
+
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.tabs{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--surface)}
+.tabs button{border:0;background:none;padding:7px 14px;cursor:pointer;font-weight:500;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--wine);color:var(--wine-ink)}
+.toolbar input[type=search]{padding:7px 11px;border:1px solid var(--line);border-radius:6px;background:var(--surface);min-width:180px;flex:1;max-width:280px}
+.toolbar select{padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--ink);cursor:pointer}
+.chk input{accent-color:var(--risk)}
+.clear{background:none;border:0;color:var(--wine);cursor:pointer;font-size:13px;text-decoration:underline}
+.resultnote{font-size:12.5px;color:var(--muted);margin:-6px 0 10px}
+
+/* map */
+.mapscroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.map{display:grid;min-width:860px}
+.colh{padding:10px 12px;border-bottom:1px solid var(--line);background:var(--wash)}
+.colh .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.colh .t{font-family:var(--display);font-size:18px;font-weight:600;line-height:1.1}
+.corner{background:var(--wash);border-bottom:1px solid var(--line)}
+.lane{padding:12px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px;min-width:0}
+.lane b{font-size:13px}
+.lane small{color:var(--muted);font-size:11.5px}
+.lane .bar{max-width:120px}
+.lane .pct{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.cell{padding:8px;border-bottom:1px solid var(--line);border-left:1px dashed var(--line);display:flex;flex-direction:column;gap:6px;min-height:56px}
+.cell.over,.col.over{background:var(--wine-soft)}
+.addcell{opacity:0;border:1px dashed var(--line);background:none;border-radius:5px;padding:3px;color:var(--muted);cursor:pointer;font-size:12px}
+.cell:hover .addcell,.addcell:focus-visible{opacity:1}
+@media (hover:none){.addcell{opacity:.6}}
+
+.knot{font:inherit;font-size:12.5px;line-height:1.3;text-align:left;cursor:pointer;border-radius:5px;padding:6px 8px 6px 9px;border:1px solid transparent;display:flex;flex-direction:column;gap:4px;color:var(--ink);background:var(--cb);position:relative;width:100%}
+.knot .row1{display:flex;gap:7px;align-items:flex-start}
+.knot .dot{margin-top:4px}
+.knot.st-todo{background:var(--surface);border:1px dashed var(--todo)}
+.knot.risk{box-shadow:inset 3px 0 0 var(--risk)}
+.knot:hover{border-color:var(--muted)}
+.knot.sel{outline:2px solid var(--wine)}
+.knot.dim{opacity:.2}
+.knot[draggable=true]{cursor:grab}
+.meta{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding-left:16px}
+.pri{font-size:10.5px;font-weight:600;letter-spacing:.03em;border-radius:3px;padding:0 5px;line-height:16px}
+.p0{background:var(--risk);color:var(--wine-ink)} .p1{background:var(--block-bg);color:var(--block)} .p2{background:var(--wash);color:var(--muted)} .p3{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.who{font-size:11px;color:var(--muted)}
+.due{font-size:11px;color:var(--muted)}
+.due.late{color:var(--risk);font-weight:600}
+.flag{font-size:10.5px;font-weight:600;color:var(--risk)}
+
+/* board */
+.board{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px}
+.col{background:var(--wash);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:200px}
+.col h3{font-family:var(--ui);font-size:13px;color:var(--ink);display:flex;gap:7px;align-items:center;justify-content:space-between}
+.col h3 span.c{color:var(--muted);font-weight:400}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:9px 10px;cursor:pointer;display:flex;flex-direction:column;gap:6px;text-align:left;font:inherit;width:100%}
+.card.risk{border-left:3px solid var(--risk)}
+.card:hover{border-color:var(--muted)}
+.card .t{font-weight:500;font-size:13px}
+.card .ln{font-size:11px;color:var(--muted)}
+.card .meta{padding-left:0}
+
+/* list */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:13px}
+th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--wine);background:var(--wash);padding:9px 10px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;user-select:none}
+th[aria-sort="ascending"]::after{content:" ▲";font-size:9px} th[aria-sort="descending"]::after{content:" ▼";font-size:9px}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--wash)}
+td.title{font-weight:500;min-width:220px}
+td.title .flag{margin-left:6px}
+td select{border:1px solid var(--line);border-radius:5px;background:var(--surface);padding:3px 6px;font-size:12.5px}
+
+/* overview */
+.ov{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.panel h2{font-size:24px;margin-bottom:10px}
+.lrow{display:grid;grid-template-columns:150px minmax(0,1fr) 54px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.lrow:last-child{border-bottom:0}
+.lrow .bar{height:9px}
+.lrow .v{font-variant-numeric:tabular-nums;color:var(--muted);text-align:right;font-size:12px}
+.ilist{list-style:none;margin:0;padding:0}
+.ilist li{border-bottom:1px solid var(--line)}
+.ilist li:last-child{border-bottom:0}
+.ilist button{background:none;border:0;width:100%;text-align:left;padding:9px 0;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px}
+.ilist .x{grid-column:2;color:var(--muted);font-size:12.5px}
+.empty{color:var(--muted);font-size:13px;padding:6px 0}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.legend .rbar{width:3px;height:12px;background:var(--risk)}
+
+/* drawer + modal */
+.scrim{position:fixed;inset:0;background:var(--shade);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--bg);z-index:41;border-left:1px solid var(--line);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.dhead{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.dhead h2{font-size:24px}
+.dbody{overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px;flex:1}
+.dfoot{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line);background:var(--surface)}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label,.flabel{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.field textarea{resize:vertical;min-height:64px}
+.field input.titlein{font-family:var(--display);font-size:22px;font-weight:600;padding:6px 10px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 10px;font-size:12.5px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.seg button[aria-pressed="true"]{border-color:var(--c,var(--wine));background:var(--cb,var(--wine-soft));font-weight:600}
+.deps{border:1px solid var(--line);border-radius:6px;background:var(--surface);max-height:180px;overflow:auto;padding:6px}
+.deps label{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:4px;font-size:13px;cursor:pointer}
+.deps label:hover{background:var(--wash)}
+.deps small{color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line);background:var(--wash);border-radius:999px;padding:2px 9px;font-size:12px;cursor:pointer}
+.notes{display:flex;flex-direction:column;gap:8px}
+.note{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px}
+.note .when{font-size:11px;color:var(--muted);margin-bottom:2px;display:flex;justify-content:space-between;gap:8px}
+.note .when button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:11px}
+.addnote{display:flex;gap:8px}
+.addnote input{flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.stamp{font-size:11.5px;color:var(--muted)}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(720px,calc(100% - 24px));max-height:calc(100% - 40px);background:var(--bg);border:1px solid var(--line);border-radius:8px;z-index:41;display:flex;flex-direction:column}
+.mtabs{display:flex;gap:4px;padding:0 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.mtabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 8px;cursor:pointer;color:var(--muted);font-weight:500}
+.mtabs button[aria-selected="true"]{color:var(--ink);border-color:var(--wine)}
+.rows{display:flex;flex-direction:column;gap:8px}
+.erow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:center}
+.erow.one{grid-template-columns:minmax(0,1fr) auto}
+.erow input{padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--surface);width:100%}
+.ebtns{display:flex;gap:4px}
+.ibtn{border:1px solid var(--line);background:var(--surface);border-radius:5px;width:30px;height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.ibtn:hover{border-color:var(--muted)}
+.help{font-size:12.5px;color:var(--muted)}
+textarea.json{width:100%;min-height:160px;font-family:ui-monospace,Menlo,monospace;font-size:12px;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.confirmbox{border:1px solid var(--risk);background:var(--risk-bg);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:6px;z-index:60;font-size:13px;max-width:calc(100% - 32px)}
+.loading{padding:40px 0;text-align:center;color:var(--muted)}
+.emptystate{background:var(--surface);border:1px dashed var(--line);border-radius:8px;padding:30px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
+.emptystate h2{font-size:26px}
+
+@media (max-width:1100px){.summary{grid-template-columns:repeat(3,minmax(0,1fr))}.overall{grid-column:1/-1}}
+@media (max-width:760px){
+  .ov{grid-template-columns:minmax(0,1fr)}
+  .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lrow{grid-template-columns:110px minmax(0,1fr) 44px}
+}
+@media (max-width:480px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2,.grid3{grid-template-columns:minmax(0,1fr)}.toolbar input[type=search]{max-width:none}}
+</style>
+<script>
+(function(){
+  var KEY="rta-tracker-theme";
+  function get(){try{return localStorage.getItem(KEY)||"system";}catch(e){return "system";}}
+  function apply(t){var r=document.documentElement;if(t==="light"||t==="dark")r.setAttribute("data-theme",t);else r.removeAttribute("data-theme");
+    var b=document.getElementById("themebtn");if(b){b.textContent={system:"Theme: System",light:"Theme: Light",dark:"Theme: Dark"}[t];b.setAttribute("aria-label","Colour theme: "+t+". Click to change.");}}
+  window.RTA_THEME={cycle:function(){var order=["system","light","dark"],t=order[(order.indexOf(get())+1)%3];try{localStorage.setItem(KEY,t);}catch(e){}apply(t);},init:function(){apply(get());}};
+  apply(get());
+  document.addEventListener("DOMContentLoaded",function(){apply(get());var b=document.getElementById("themebtn");if(b)b.addEventListener("click",window.RTA_THEME.cycle);});
+})();
+</script>
+
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Ṛta · founding team</div>
+      <h1>Ṛta Progress Tracker</h1>
+      <div class="mode" id="mode"><i></i><span>Connecting…</span></div>
+    </div>
+    <div class="actions">
+      <span id="authbox" style="display:inline-flex;gap:8px;align-items:center"></span>
+      <button class="btn primary edit-only" id="newbtn">+ New step</button>
+      <button class="btn" id="themebtn" type="button">Theme: System</button>
+      <button class="btn" id="setbtn">Workstreams, team and data</button>
+    </div>
+  </header>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="toolbar">
+    <div class="tabs" role="tablist" aria-label="View">
+      <button role="tab" id="tab-map" data-view="map" aria-selected="true">Map</button>
+      <button role="tab" id="tab-board" data-view="board" aria-selected="false">Board</button>
+      <button role="tab" id="tab-list" data-view="list" aria-selected="false">List</button>
+      <button role="tab" id="tab-overview" data-view="overview" aria-selected="false">Overview</button>
+    </div>
+    <input type="search" id="fq" placeholder="Search steps" aria-label="Search steps">
+    <select id="fpri" aria-label="Filter by priority"><option value="">Any priority</option></select>
+    <select id="fown" aria-label="Filter by owner"><option value="">Anyone</option></select>
+    <select id="flane" aria-label="Filter by workstream"><option value="">All workstreams</option></select>
+    <label class="chk"><input type="checkbox" id="frisk"> Falling back only</label>
+    <button class="clear" id="fclear">Clear filters</button>
+  </div>
+  <div class="resultnote" id="resultnote"></div>
+
+  <div id="view"><div class="loading">Loading the tracker…</div></div>
+  <div class="legend" id="legend">
+    <span><i class="dot st-done"></i>Done</span><span><i class="dot st-prog"></i>In progress</span><span><i class="dot st-open"></i>Waiting on a decision</span>
+    <span><i class="dot st-block"></i>Blocked</span><span><i class="dot st-todo"></i>Not started</span><span><i class="rbar"></i>Falling back</span>
+    <span><b class="pri p0">P0</b>Critical</span><span><b class="pri p1">P1</b>High</span><span><b class="pri p2">P2</b>Medium</span><span><b class="pri p3">P3</b>Low</span>
+  </div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script type="module">
+const cfg = window.RTA_FIREBASE_CONFIG;
+if (!cfg || !cfg.apiKey || String(cfg.apiKey).startsWith("PASTE")) {
+  window.RTA_START(null);
+} else {
+  try {
+    const V = "10.12.2", base = "https://www.gstatic.com/firebasejs/" + V + "/";
+    const appMod = await import(base + "firebase-app.js");
+    const fa = await import(base + "firebase-auth.js");
+    const fs = await import(base + "firebase-firestore.js");
+    const app = appMod.initializeApp(cfg);
+    const auth = fa.getAuth(app);
+    const db = fs.getFirestore(app);
+    const provider = new fa.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+    window.RTA_START({
+      db, fs,
+      signIn: () => fa.signInWithPopup(auth, provider),
+      signOut: () => fa.signOut(auth),
+      onAuth: cb => fa.onAuthStateChanged(auth, cb)
+    });
+  } catch (e) {
+    console.error(e);
+    window.RTA_START(null);
+  }
+}
+</script>
+<div id="overlay"></div>
+<div id="toastbox" aria-live="polite"></div>
+
+<script>
+window.RTA_SEED = /*__SEED__*/null;
+(function(){
+"use strict";
+const STATUSES=[["todo","Not started"],["open","Waiting on a decision"],["prog","In progress"],["block","Blocked"],["done","Done"]];
+const SLABEL=Object.fromEntries(STATUSES);
+const PRI=[["0","P0","Critical"],["1","P1","High"],["2","P2","Medium"],["3","P3","Low"]];
+const DEFAULT_CONFIG={lanes:[{id:"legal",name:"Name and legal",sub:""},{id:"story",name:"Brand and story",sub:""},{id:"identity",name:"Identity and experience",sub:""},{id:"supply",name:"Materials and supply",sub:""},{id:"fabric",name:"Fabric and testing",sub:""},{id:"product",name:"Product",sub:""},{id:"market",name:"Market and customers",sub:""},{id:"launch",name:"Launch",sub:""}],stages:[{id:"s1",name:"Foundations"},{id:"s2",name:"Make and prove the cloth"},{id:"s3",name:"Prove demand"},{id:"s4",name:"Launch and keep"}],people:["Rohith","Chaitu","Yasaswini","All"]};
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=p=>(p||"t")+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const today=()=>new Date().toISOString().slice(0,10);
+const LSK="rta-tracker:v1";
+const pref={get(k,d){try{const v=localStorage.getItem("rta-tracker-pref:"+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem("rta-tracker-pref:"+k,JSON.stringify(v));}catch(e){}}};
+
+// ---------- state ----------
+let config=null, tasks={}, ready=false, readOnly=false, mode="connecting";
+let view=pref.get("view","map"), sortKey=pref.get("sortKey","priority"), sortDir=pref.get("sortDir",1);
+const F={q:"",pri:"",own:"",lane:"",risk:false,status:""};
+let me=null, userCap=null, downloadsCap=null;
+
+function norm(t){return {id:t.id,title:t.title||"Untitled step",lane:t.lane||(config&&config.lanes[0]&&config.lanes[0].id)||"",stage:t.stage||(config&&config.stages[0]&&config.stages[0].id)||"",status:SLABEL[t.status]?t.status:"todo",priority:[0,1,2,3].includes(Number(t.priority))?Number(t.priority):2,owner:t.owner||"",due:t.due||"",what:t.what||"",fallback:t.fallback||"",rec:t.rec||"",needs:Array.isArray(t.needs)?t.needs.filter(x=>typeof x==="string"):[],notes:Array.isArray(t.notes)?t.notes:[],order:typeof t.order==="number"?t.order:0,updatedAt:t.updatedAt||"",updatedBy:t.updatedBy||""};}
+function normCfg(c){c=c||{};return {lanes:Array.isArray(c.lanes)&&c.lanes.length?c.lanes:DEFAULT_CONFIG.lanes,stages:Array.isArray(c.stages)&&c.stages.length?c.stages:DEFAULT_CONFIG.stages,people:Array.isArray(c.people)?c.people:DEFAULT_CONFIG.people};}
+
+// ---------- stores ----------
+const LocalStore={
+  mem:null,
+  load(){let d=null;try{d=JSON.parse(localStorage.getItem(LSK)||"null");}catch(e){}
+    if(!d&&this.mem)d=this.mem;
+    if(!d&&window.RTA_SEED)d=JSON.parse(JSON.stringify(window.RTA_SEED));
+    if(!d)d={config:DEFAULT_CONFIG,tasks:[]};
+    this.mem=d;return d;},
+  persist(){try{localStorage.setItem(LSK,JSON.stringify(this.mem));}catch(e){}},
+  start(cb){const d=this.load();cb(normCfg(d.config),d.tasks.map(norm));},
+  async saveTask(t){const i=this.mem.tasks.findIndex(x=>x.id===t.id);if(i>=0)this.mem.tasks[i]=t;else this.mem.tasks.push(t);this.persist();},
+  async deleteTask(id){this.mem.tasks=this.mem.tasks.filter(x=>x.id!==id);this.persist();},
+  async saveConfig(c){this.mem.config=c;this.persist();},
+  async replaceAll(c,ts){this.mem={config:c,tasks:ts};this.persist();}
+};
+function DbStore(db){
+  return {
+    start(cb,onErr){let cfg=null,list=null;const fire=()=>{if(list)cb(normCfg(cfg),list);};
+      db.doc("config/main").onSnapshot(s=>{cfg=s.exists?s.data():null;fire();},onErr);
+      db.collection("tasks").onSnapshot(s=>{list=s.docs.map(d=>norm(Object.assign({},d.data(),{id:d.id})));fire();},onErr);},
+    async saveTask(t){const b=Object.assign({},t);delete b.id;await db.doc("tasks/"+t.id).set(b);},
+    async deleteTask(id){await db.doc("tasks/"+id).delete();},
+    async saveConfig(c){await db.doc("config/main").set(c);},
+    async replaceAll(c,ts){await db.doc("config/main").set(c);
+      const keep=new Set(ts.map(t=>t.id));
+      for(const id of Object.keys(tasks)){if(!keep.has(id))await db.doc("tasks/"+id).delete();}
+      for(const t of ts){await this.saveTask(t);}}
+  };
+}
+let store=LocalStore;
+
+function onData(c,list){$(".toolbar").hidden=false;config=c;tasks=Object.fromEntries(list.map(t=>[t.id,t]));ready=true;fillFilters();render();if(openId&&drawerOpen&&!dirty)renderDrawer();}
+
+let fbApi=null, fbUser=null, unsub=null;
+function FbStore(api){const F_=api.fs, db=api.db;
+  return {
+    start(cb,onErr){let cfg=null,list=null;const fire=()=>{if(list)cb(normCfg(cfg),list);};
+      const u1=F_.onSnapshot(F_.doc(db,"config","main"),s=>{cfg=s.exists()?s.data():null;fire();},onErr);
+      const u2=F_.onSnapshot(F_.collection(db,"tasks"),s=>{list=s.docs.map(d=>norm(Object.assign({},d.data(),{id:d.id})));fire();},onErr);
+      return ()=>{u1();u2();};},
+    async saveTask(t){const b=Object.assign({},t);delete b.id;await F_.setDoc(F_.doc(db,"tasks",t.id),b);},
+    async deleteTask(id){await F_.deleteDoc(F_.doc(db,"tasks",id));},
+    async saveConfig(c){await F_.setDoc(F_.doc(db,"config","main"),c);},
+    async replaceAll(c,ts){const ops=[["set",F_.doc(db,"config","main"),c]];
+      const keep=new Set(ts.map(t=>t.id));Object.keys(tasks).forEach(id=>{if(!keep.has(id))ops.push(["del",F_.doc(db,"tasks",id)]);});
+      ts.forEach(t=>{const b=Object.assign({},t);delete b.id;ops.push(["set",F_.doc(db,"tasks",t.id),b]);});
+      for(let i=0;i<ops.length;i+=400){const batch=F_.writeBatch(db);ops.slice(i,i+400).forEach(o=>o[0]==="del"?batch.delete(o[1]):batch.set(o[1],o[2]));await batch.commit();}}
+  };
+}
+window.RTA_START=function(api){
+  fbApi=api;
+  if(!api){store=LocalStore;mode="local";setMode();store.start(onData);return;}
+  api.onAuth(u=>{
+    fbUser=u;renderAuth();
+    if(unsub){unsub();unsub=null;}
+    if(!u){ready=false;tasks={};mode="signedout";setMode();showSignIn();return;}
+    me=u.displayName||u.email;store=FbStore(api);mode="live";setMode();
+    $("#view").innerHTML='<div class="loading">Loading the tracker…</div>';
+    unsub=store.start(onData,e=>{if(e&&e.code==="permission-denied")showDenied(u.email);else toast("Live updates stopped. Reload the page to reconnect.");});
+  });
+};
+function renderAuth(){const b=$("#authbox");if(!b)return;
+  if(!fbApi){b.innerHTML="";return;}
+  b.innerHTML=fbUser?`<span class="who" style="font-size:12.5px">${esc(fbUser.email)}</span><button class="btn small" data-act="signout">Sign out</button>`:`<button class="btn small primary" data-act="signin">Sign in with Google</button>`;
+  $("#newbtn").hidden=!fbUser;$("#setbtn").hidden=!fbUser;}
+function showSignIn(){$(".toolbar").hidden=true;$("#summary").innerHTML="";$("#resultnote").textContent="";$("#legend").hidden=true;
+  $("#view").innerHTML=`<div class="emptystate"><h2>Sign in to open the tracker</h2><p class="help">The plan is private to the Ṛta team. Sign in with the Google account your email was added with.</p><button class="btn primary" data-act="signin">Sign in with Google</button></div>`;}
+function showDenied(email){$(".toolbar").hidden=true;ready=false;$("#summary").innerHTML="";$("#legend").hidden=true;
+  $("#view").innerHTML=`<div class="emptystate"><h2>This account isn't on the team list</h2><p class="help">You're signed in as ${esc(email)}. Ask whoever set up the tracker to add this email to the Firestore rules, or sign out and use the account they added.</p><button class="btn" data-act="signout">Sign out</button></div>`;}
+function setMode(){const m=$("#mode");m.className="mode "+(mode==="signedout"?"ro":mode);
+  m.querySelector("span").textContent={live:"Shared with the team · updates live",local:"Firebase isn't set up yet · saving in this browser only",signedout:"Signed out",connecting:"Connecting…"}[mode];
+  document.body.classList.toggle("readonly",readOnly);}
+
+// ---------- writes ----------
+async function write(fn,okMsg){
+  if(readOnly){toast("This tracker is view only for you.");return false;}
+  try{await fn();if(store===LocalStore)store.start(onData);if(okMsg)toast(okMsg);return true;}
+  catch(e){const code=e&&e.code;
+    if(code==="permission-denied"){toast("Your account isn't on the team list, so this change wasn't saved.");}
+    else if(code==="invalid_argument"&&store!==LocalStore){readOnly=true;mode="ro";setMode();toast("You don't have edit access, so this change wasn't saved.");}
+    else if(code==="quota_exceeded")toast("The tracker is full. Delete old steps, then try again.");
+    else toast("That didn't save. Check your connection and try again.");
+    return false;}
+}
+function stamp(t){t.updatedAt=new Date().toISOString();if(me)t.updatedBy=me;return t;}
+const saveTask=(t,msg)=>write(()=>store.saveTask(stamp(Object.assign({},t))),msg);
+
+// ---------- filters ----------
+function matches(t){
+  if(F.status==="risk"){if(!t.fallback)return false;}else if(F.status==="p0open"){if(!(t.priority===0&&t.status!=="done"))return false;}else if(F.status&&t.status!==F.status)return false;
+  if(F.pri!==""&&String(t.priority)!==F.pri)return false;
+  if(F.own&&t.owner!==F.own)return false;
+  if(F.lane&&t.lane!==F.lane)return false;
+  if(F.risk&&!t.fallback)return false;
+  if(F.q){const h=(t.title+" "+t.what+" "+t.fallback+" "+t.rec+" "+t.owner).toLowerCase();if(!h.includes(F.q.toLowerCase()))return false;}
+  return true;}
+const anyFilter=()=>F.q||F.pri!==""||F.own||F.lane||F.risk||F.status;
+function fillFilters(){
+  const keep=(sel,opts,first)=>{const v=sel.value;sel.innerHTML=first+opts;sel.value=v;};
+  keep($("#fpri"),PRI.map(([v,k,l])=>`<option value="${v}">${k} ${l}</option>`).join(""),'<option value="">Any priority</option>');
+  const people=[...new Set([...config.people,...Object.values(tasks).map(t=>t.owner).filter(Boolean)])];
+  keep($("#fown"),people.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join(""),'<option value="">Anyone</option>');
+  keep($("#flane"),config.lanes.map(l=>`<option value="${esc(l.id)}">${esc(l.name)}</option>`).join(""),'<option value="">All workstreams</option>');
+}
+const all=()=>Object.values(tasks);
+const laneName=id=>{const l=config.lanes.find(x=>x.id===id);return l?l.name:"No workstream";};
+const stageName=id=>{const s=config.stages.find(x=>x.id===id);return s?s.name:"No stage";};
+const isLate=t=>t.due&&t.status!=="done"&&t.due<today();
+const fmtDate=d=>{if(!d)return "";const [y,m,dd]=d.split("-");return `${Number(dd)} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][Number(m)-1]||""}`;};
+const byPri=(a,b)=>a.priority-b.priority||a.order-b.order||a.title.localeCompare(b.title);
+
+// ---------- render ----------
+function render(){
+  if(!ready)return;
+  renderSummary();
+  $$(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===view));
+  const shown=all().filter(matches).length, total=all().length;
+  $("#resultnote").textContent=anyFilter()?`Showing ${shown} of ${total} steps`:"";
+  $("#legend").hidden=view==="overview";
+  if(!total){renderEmpty();return;}
+  ({map:renderMap,board:renderBoard,list:renderList,overview:renderOverview})[view]();
+}
+function renderEmpty(){
+  $("#view").innerHTML=`<div class="emptystate"><h2>No steps yet</h2><p class="help">Add the first step, or import the starter plan: open “Workstreams, team and data”, go to Data, and choose the file rta-starter-plan.json.</p><div class="actions"><button class="btn primary edit-only" data-act="new">+ New step</button><button class="btn edit-only" data-act="data">Import the starter plan</button></div></div>`;
+}
+function renderSummary(){
+  const ts=all(), n=ts.length||1;
+  const c={done:0,prog:0,open:0,block:0,todo:0};ts.forEach(t=>c[t.status]++);
+  const risk=ts.filter(t=>t.fallback&&t.status!=="done").length, p0=ts.filter(t=>t.priority===0&&t.status!=="done").length, late=ts.filter(isLate).length;
+  const pct=Math.round(100*c.done/n);
+  const seg=k=>`<span style="width:${100*c[k]/n}%;background:var(--${k==="todo"?"line":k})"></span>`;
+  const tile=(k,l,v,cls)=>`<button class="tile ${cls}" data-sf="${k}" aria-pressed="${F.status===k}"><span class="n">${v}</span><span class="l"><i class="dot ${cls}"></i>${l}</span></button>`;
+  $("#summary").innerHTML=`<div class="overall"><div class="eyebrow">Overall</div><div class="big">${ts.length?pct:0}% done</div><div class="bar" aria-hidden="true">${seg("done")}${seg("prog")}${seg("open")}${seg("block")}${seg("todo")}</div><div class="sub">${c.done} of ${ts.length} steps · ${p0} critical still open${late?` · <b style="color:var(--risk)">${late} overdue</b>`:""}</div></div>`+
+   tile("todo","Not started",c.todo,"st-todo")+tile("prog","In progress",c.prog,"st-prog")+tile("open","Waiting on a decision",c.open,"st-open")+tile("block","Blocked",c.block,"st-block")+tile("done","Done",c.done,"st-done")+tile("risk","Falling back",risk,"st-risk");
+}
+function metaHTML(t){return `<span class="pri p${t.priority}">P${t.priority}</span>${t.owner?`<span class="who">${esc(t.owner)}</span>`:""}${t.due?`<span class="due${isLate(t)?" late":""}">${isLate(t)?"Overdue · ":"Due "}${fmtDate(t.due)}</span>`:""}${t.notes.length?`<span class="who">${t.notes.length} note${t.notes.length>1?"s":""}</span>`:""}`;}
+function renderMap(){
+  const L=config.lanes,S=config.stages,ts=all();
+  let h=`<div class="mapscroll"><div class="map" style="grid-template-columns:170px repeat(${S.length},minmax(170px,1fr))"><div class="corner"></div>`+S.map((s,i)=>`<div class="colh"><div class="k">Stage ${i+1}</div><div class="t">${esc(s.name)}</div></div>`).join("");
+  const orphans=ts.filter(t=>!L.find(l=>l.id===t.lane));
+  const lanes=orphans.length?[...L,{id:"__none",name:"No workstream",sub:"Move these into a workstream"}]:L;
+  lanes.forEach(l=>{const lt=ts.filter(t=>l.id==="__none"?!L.find(x=>x.id===t.lane):t.lane===l.id);const d=lt.filter(t=>t.status==="done").length;const p=lt.length?Math.round(100*d/lt.length):0;
+    h+=`<div class="lane"><b>${esc(l.name)}</b>${l.sub?`<small>${esc(l.sub)}</small>`:""}<div class="bar" aria-hidden="true"><span style="width:${p}%;background:var(--done)"></span></div><span class="pct">${d} of ${lt.length} done</span></div>`;
+    S.forEach((s,si)=>{const cellTs=lt.filter(t=>t.stage===s.id||(si===0&&!S.find(x=>x.id===t.stage))).sort(byPri);
+      h+=`<div class="cell" data-lane="${esc(l.id)}" data-stage="${esc(s.id)}">`+cellTs.map(knotHTML).join("")+(readOnly||l.id==="__none"?"":`<button class="addcell edit-only" data-add-lane="${esc(l.id)}" data-add-stage="${esc(s.id)}" aria-label="Add a step to ${esc(l.name)}, ${esc(s.name)}">+ Add</button>`)+`</div>`;});
+  });
+  $("#view").innerHTML=h+`</div></div>`;
+}
+function knotHTML(t){const show=matches(t);return `<button class="knot st-${t.status}${t.fallback?" risk":""}${show?"":" dim"}${openId===t.id&&drawerOpen?" sel":""}" data-id="${esc(t.id)}" ${readOnly?"":'draggable="true"'} aria-label="${esc(t.title)}, ${SLABEL[t.status]}, priority P${t.priority}${t.fallback?", falling back":""}"><span class="row1"><i class="dot"></i><span>${esc(t.title)}</span></span><span class="meta">${metaHTML(t)}${t.fallback?'<span class="flag">Falling back</span>':""}</span></button>`;}
+function renderBoard(){
+  const ts=all().filter(matches);
+  $("#view").innerHTML=`<div class="board">`+STATUSES.map(([k,l])=>{const col=ts.filter(t=>t.status===k).sort(byPri);
+    return `<div class="col st-${k}" data-status="${k}"><h3><span style="display:inline-flex;gap:7px;align-items:center"><i class="dot"></i>${l}</span><span class="c">${col.length}</span></h3>`+col.map(t=>`<button class="card${t.fallback?" risk":""}" data-id="${esc(t.id)}" ${readOnly?"":'draggable="true"'}><span class="t">${esc(t.title)}</span><span class="ln">${esc(laneName(t.lane))} · ${esc(stageName(t.stage))}</span><span class="meta">${metaHTML(t)}${t.fallback?'<span class="flag">Falling back</span>':""}</span></button>`).join("")+(readOnly?"":`<button class="addcell edit-only" style="opacity:.7" data-add-status="${k}">+ Add</button>`)+`</div>`;}).join("")+`</div>`;
+}
+const SORTS={title:t=>t.title.toLowerCase(),lane:t=>config.lanes.findIndex(l=>l.id===t.lane)*100+config.stages.findIndex(s=>s.id===t.stage),stage:t=>config.stages.findIndex(s=>s.id===t.stage),status:t=>STATUSES.findIndex(s=>s[0]===t.status),priority:t=>t.priority*1000+t.order,owner:t=>(t.owner||"~").toLowerCase(),due:t=>t.due||"9999",updated:t=>t.updatedAt||""};
+function renderList(){
+  const ts=all().filter(matches).sort((a,b)=>{const x=SORTS[sortKey](a),y=SORTS[sortKey](b);return (x<y?-1:x>y?1:0)*sortDir||byPri(a,b);});
+  const th=(k,l)=>`<th data-sort="${k}" ${sortKey===k?`aria-sort="${sortDir>0?"ascending":"descending"}"`:""} tabindex="0">${l}</th>`;
+  const dis=readOnly?" disabled":"";
+  $("#view").innerHTML=`<div class="tablewrap"><table><thead><tr>${th("title","Step")}${th("lane","Workstream")}${th("stage","Stage")}${th("status","Status")}${th("priority","Priority")}${th("owner","Owner")}${th("due","Due")}${th("updated","Updated")}</tr></thead><tbody>`+
+   (ts.length?ts.map(t=>`<tr data-id="${esc(t.id)}"><td class="title">${esc(t.title)}${t.fallback?'<span class="flag">Falling back</span>':""}</td><td>${esc(laneName(t.lane))}</td><td>${esc(stageName(t.stage))}</td>
+   <td><select data-inline="status" data-tid="${esc(t.id)}" aria-label="Status"${dis}>${STATUSES.map(([k,l])=>`<option value="${k}"${k===t.status?" selected":""}>${l}</option>`).join("")}</select></td>
+   <td><select data-inline="priority" data-tid="${esc(t.id)}" aria-label="Priority"${dis}>${PRI.map(([v,k,l])=>`<option value="${v}"${Number(v)===t.priority?" selected":""}>${k} ${l}</option>`).join("")}</select></td>
+   <td>${esc(t.owner)}</td><td class="${isLate(t)?"due late":""}">${t.due?fmtDate(t.due)+" "+t.due.slice(0,4):""}</td><td class="who">${t.updatedAt?fmtDate(t.updatedAt.slice(0,10)):""}</td></tr>`).join(""):`<tr><td colspan="8" class="empty">No steps match these filters.</td></tr>`)+`</tbody></table></div>`;
+}
+function renderOverview(){
+  const ts=all(), L=config.lanes;
+  const laneRows=L.map(l=>{const lt=ts.filter(t=>t.lane===l.id);const c=k=>lt.filter(t=>t.status===k).length;const n=lt.length||1;
+    return `<div class="lrow"><span>${esc(l.name)}</span><div class="bar">${["done","prog","open","block"].map(k=>`<span style="width:${100*c(k)/n}%;background:var(--${k})"></span>`).join("")}</div><span class="v">${c("done")}/${lt.length}</span></div>`;}).join("");
+  const people=[...new Set([...config.people,...ts.map(t=>t.owner).filter(Boolean)])];
+  const ownRows=people.map(p=>{const pt=ts.filter(t=>t.owner===p&&t.status!=="done");const p0=pt.filter(t=>t.priority<=1).length;return `<div class="lrow"><span>${esc(p)}</span><div class="bar"><span style="width:${Math.min(100,pt.length*6)}%;background:var(--wine)"></span></div><span class="v">${pt.length} open</span></div><div class="help" style="margin:-4px 0 4px 160px">${p0} critical or high</div>`;}).join("");
+  const item=t=>`<li><button data-id="${esc(t.id)}"><span class="pri p${t.priority}">P${t.priority}</span><span><b>${esc(t.title)}</b></span><span class="x">${esc(t.fallback||t.rec||t.what)}</span></button></li>`;
+  const risks=ts.filter(t=>t.fallback&&t.status!=="done").sort(byPri);
+  const next=ts.filter(t=>t.status!=="done"&&t.status!=="block"&&t.needs.every(n=>!tasks[n]||tasks[n].status==="done")).sort(byPri).slice(0,10);
+  const blocked=ts.filter(t=>t.status!=="done"&&(t.status==="block"||t.needs.some(n=>tasks[n]&&tasks[n].status!=="done"))).sort(byPri);
+  const late=ts.filter(isLate).sort((a,b)=>a.due.localeCompare(b.due));
+  $("#view").innerHTML=`<div class="ov">
+   <div class="panel"><h2>Progress by workstream</h2>${laneRows}</div>
+   <div class="panel"><h2>Ready to start now</h2><p class="help" style="margin:-4px 0 6px">Open steps whose dependencies are all done, most important first.</p><ul class="ilist">${next.map(item).join("")||'<li class="empty">Nothing ready.</li>'}</ul></div>
+   <div class="panel"><h2>Where we fall back</h2><ul class="ilist">${risks.map(item).join("")||'<li class="empty">No steps flagged.</li>'}</ul></div>
+   <div class="panel"><h2>Workload by owner</h2>${ownRows}</div>
+   <div class="panel"><h2>Waiting on something</h2><p class="help" style="margin:-4px 0 6px">Blocked, or needing a step that isn't done.</p><ul class="ilist">${blocked.slice(0,12).map(t=>`<li><button data-id="${esc(t.id)}"><span class="pri p${t.priority}">P${t.priority}</span><span><b>${esc(t.title)}</b></span><span class="x">Needs: ${esc(t.needs.filter(n=>tasks[n]&&tasks[n].status!=="done").map(n=>tasks[n].title).join(", ")||"marked blocked")}</span></button></li>`).join("")||'<li class="empty">Nothing waiting.</li>'}</ul></div>
+   <div class="panel"><h2>Overdue</h2><ul class="ilist">${late.map(t=>`<li><button data-id="${esc(t.id)}"><span class="pri p${t.priority}">P${t.priority}</span><span><b>${esc(t.title)}</b></span><span class="x">Due ${fmtDate(t.due)} · ${esc(t.owner||"No owner")}</span></button></li>`).join("")||'<li class="empty">Nothing overdue. Add due dates in each step to track this.</li>'}</ul></div>
+  </div>`;
+}
+
+// ---------- drawer ----------
+let openId=null, drawerOpen=false, draft=null, dirty=false, confirmDel=false, depQ="";
+function openDrawer(id,preset){
+  if(id&&!tasks[id])return;
+  openId=id||null; drawerOpen=true; dirty=!id; confirmDel=false; depQ="";
+  draft=id?JSON.parse(JSON.stringify(tasks[id])):norm(Object.assign({id:uid(),title:"",status:"todo",priority:2,lane:config.lanes[0]&&config.lanes[0].id,stage:config.stages[0]&&config.stages[0].id,order:Date.now()},preset||{}));
+  renderDrawer(); if(view==="map")renderMap();
+  setTimeout(()=>{const f=$(id?".dhead .btn":"#d-title");f&&f.focus();},30);
+}
+function closeDrawer(){drawerOpen=false;openId=null;draft=null;$("#overlay").innerHTML="";render();}
+function renderDrawer(){
+  if(!drawerOpen)return;
+  if(openId&&tasks[openId]&&!dirty)draft=JSON.parse(JSON.stringify(tasks[openId]));
+  const t=draft, isNew=!openId, ro=readOnly?" disabled":"";
+  const people=[...new Set([...config.people,t.owner].filter(Boolean))];
+  const others=all().filter(x=>x.id!==t.id);
+  const depList=others.filter(x=>!depQ||x.title.toLowerCase().includes(depQ.toLowerCase())).sort((a,b)=>config.lanes.findIndex(l=>l.id===a.lane)-config.lanes.findIndex(l=>l.id===b.lane)||byPri(a,b));
+  const unblocks=all().filter(x=>x.needs.includes(t.id));
+  $("#overlay").innerHTML=`<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="${isNew?"New step":"Edit step"}">
+   <div class="dhead"><div><div class="eyebrow">${isNew?"New step":esc(laneName(t.lane))+" · "+esc(stageName(t.stage))}</div></div><button class="btn small" data-act="close">Close</button></div>
+   <div class="dbody">
+    <div class="field"><label for="d-title">Step</label><input id="d-title" class="titlein" value="${esc(t.title)}" placeholder="What needs to happen?"${ro}></div>
+    <div class="field"><span class="flabel">Status</span><div class="seg" role="group" aria-label="Status">${STATUSES.map(([k,l])=>`<button class="st-${k}" data-set="status" data-v="${k}" aria-pressed="${t.status===k}"${ro}><i class="dot"></i>${l}</button>`).join("")}</div></div>
+    <div class="field"><span class="flabel">Priority</span><div class="seg" role="group" aria-label="Priority">${PRI.map(([v,k,l])=>`<button data-set="priority" data-v="${v}" aria-pressed="${t.priority===Number(v)}"${ro}><b class="pri p${v}">${k}</b>${l}</button>`).join("")}</div></div>
+    <div class="grid2">
+     <div class="field"><label for="d-lane">Workstream</label><select id="d-lane"${ro}>${config.lanes.map(l=>`<option value="${esc(l.id)}"${l.id===t.lane?" selected":""}>${esc(l.name)}</option>`).join("")}</select></div>
+     <div class="field"><label for="d-stage">Stage</label><select id="d-stage"${ro}>${config.stages.map(s=>`<option value="${esc(s.id)}"${s.id===t.stage?" selected":""}>${esc(s.name)}</option>`).join("")}</select></div>
+     <div class="field"><label for="d-owner">Owner</label><select id="d-owner"${ro}><option value="">No owner</option>${people.map(p=>`<option value="${esc(p)}"${p===t.owner?" selected":""}>${esc(p)}</option>`).join("")}</select></div>
+     <div class="field"><label for="d-due">Due date</label><input type="date" id="d-due" value="${esc(t.due)}"${ro}></div>
+    </div>
+    <div class="field"><label for="d-what">What it involves</label><textarea id="d-what" rows="3"${ro}>${esc(t.what)}</textarea></div>
+    <div class="field"><label for="d-fb">Where we fall back <span style="text-transform:none;letter-spacing:0">(leave empty if on track)</span></label><textarea id="d-fb" rows="2"${ro}>${esc(t.fallback)}</textarea></div>
+    <div class="field"><label for="d-rec">Recommendation or next action</label><textarea id="d-rec" rows="2"${ro}>${esc(t.rec)}</textarea></div>
+    <div class="field"><label for="d-depq">Needs these steps first</label>
+     <input id="d-depq" placeholder="Find a step" value="${esc(depQ)}">
+     <div class="deps">${depList.map(x=>`<label><input type="checkbox" data-dep="${esc(x.id)}"${t.needs.includes(x.id)?" checked":""}${ro}><span>${esc(x.title)}<br><small>${esc(laneName(x.lane))} · ${SLABEL[x.status]}</small></span></label>`).join("")||'<div class="empty">No other steps.</div>'}</div></div>
+    ${unblocks.length?`<div class="field"><span class="flabel">Unblocks</span><div class="chips">${unblocks.map(u=>`<button class="chip" data-open="${esc(u.id)}">${esc(u.title)}</button>`).join("")}</div></div>`:""}
+    ${isNew?"":`<div class="field"><span class="flabel">Notes and updates</span><div class="notes">${t.notes.slice().reverse().map(n=>`<div class="note"><div class="when"><span>${esc(fmtDate((n.at||"").slice(0,10)))} ${esc((n.at||"").slice(0,4))}${n.by?" · "+esc(n.by):""}</span>${readOnly?"":`<button data-delnote="${esc(n.id)}">Remove</button>`}</div>${esc(n.text)}</div>`).join("")||'<div class="empty">No notes yet.</div>'}
+      ${readOnly?"":`<div class="addnote"><input id="d-note" placeholder="Add an update, e.g. “Weaver in Gadwal replied”"><button class="btn small" data-act="addnote">Add</button></div>`}</div></div>`}
+    ${t.updatedAt?`<div class="stamp" id="stamp">Last changed ${fmtDate(t.updatedAt.slice(0,10))} ${t.updatedAt.slice(0,4)}<span id="stampwho"></span></div>`:""}
+    ${confirmDel?`<div class="confirmbox"><b>Delete “${esc(t.title||"this step")}”?</b><span class="help">This removes it for everyone and can't be undone. Steps that needed it will no longer list it.</span><div class="actions"><button class="btn danger" data-act="reallydelete">Delete step</button><button class="btn" data-act="canceldelete">Keep it</button></div></div>`:""}
+   </div>
+   <div class="dfoot">${readOnly?'<span class="help">View only</span>':`<div class="actions">${isNew?"":`<button class="btn danger" data-act="delete">Delete</button><button class="btn" data-act="duplicate">Duplicate</button>`}</div><div class="actions"><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="save">${isNew?"Add step":"Save changes"}</button></div>`}</div>
+  </aside>`;
+  resolveStamp(t);
+}
+function resolveStamp(t){const el=$("#stampwho");if(el&&t.updatedBy)el.textContent=" by "+t.updatedBy;}
+function readForm(){const t=draft;if(!t)return;
+  const v=id=>{const e=$("#"+id);return e?e.value:undefined;};
+  if(v("d-title")!==undefined)t.title=v("d-title").trim();
+  t.lane=v("d-lane")||t.lane;t.stage=v("d-stage")||t.stage;t.owner=v("d-owner")||"";t.due=v("d-due")||"";
+  t.what=(v("d-what")||"").trim();t.fallback=(v("d-fb")||"").trim();t.rec=(v("d-rec")||"").trim();}
+async function saveDraft(){readForm();const t=draft;if(openId&&tasks[openId])t.notes=tasks[openId].notes;
+  if(!t.title){toast("Give the step a name first.");$("#d-title").focus();return;}
+  const isNew=!openId;const ok=await saveTask(t,isNew?"Step added":"Saved");
+  if(ok){dirty=false;openId=t.id;closeDrawer();}}
+
+// ---------- settings modal ----------
+let mtab="lanes", mdraft=null, mconfirm=null;
+function openSettings(tab){mtab=tab||"lanes";mdraft=JSON.parse(JSON.stringify(config));mconfirm=null;renderSettings();}
+function closeSettings(){mdraft=null;$("#overlay").innerHTML="";}
+function renderSettings(){
+  const c=mdraft, ro=readOnly?" disabled":"";
+  const counts=id=>all().filter(t=>t.lane===id).length, scounts=id=>all().filter(t=>t.stage===id).length;
+  let body="";
+  if(mtab==="lanes"){body=`<p class="help">Workstreams are the rows of the map. Rename, reorder, add or remove them. Removing one moves its steps to the workstream you choose.</p><div class="rows">`+c.lanes.map((l,i)=>`<div class="erow"><input data-lf="name" data-i="${i}" value="${esc(l.name)}" aria-label="Workstream name"${ro}><input data-lf="sub" data-i="${i}" value="${esc(l.sub||"")}" placeholder="Short description" aria-label="Description"${ro}><div class="ebtns"><button class="ibtn" data-mv="lanes" data-i="${i}" data-d="-1" aria-label="Move up"${ro}>↑</button><button class="ibtn" data-mv="lanes" data-i="${i}" data-d="1" aria-label="Move down"${ro}>↓</button><button class="ibtn" data-rm="lanes" data-i="${i}" aria-label="Remove ${esc(l.name)}"${ro}>✕</button></div></div>${mconfirm&&mconfirm.kind==="lanes"&&mconfirm.i===i?moveBox("lanes",i,counts(l.id)):""}`).join("")+`</div>${readOnly?"":'<button class="btn small" data-add="lanes" style="margin-top:10px">+ Add workstream</button>'}`;}
+  if(mtab==="stages"){body=`<p class="help">Stages are the columns of the map, in order.</p><div class="rows">`+c.stages.map((s,i)=>`<div class="erow one"><input data-sf2="name" data-i="${i}" value="${esc(s.name)}" aria-label="Stage name"${ro}><div class="ebtns"><button class="ibtn" data-mv="stages" data-i="${i}" data-d="-1" aria-label="Move left"${ro}>↑</button><button class="ibtn" data-mv="stages" data-i="${i}" data-d="1" aria-label="Move right"${ro}>↓</button><button class="ibtn" data-rm="stages" data-i="${i}" aria-label="Remove ${esc(s.name)}"${ro}>✕</button></div></div>${mconfirm&&mconfirm.kind==="stages"&&mconfirm.i===i?moveBox("stages",i,scounts(s.id)):""}`).join("")+`</div>${readOnly?"":'<button class="btn small" data-add="stages" style="margin-top:10px">+ Add stage</button>'}`;}
+  if(mtab==="team"){body=`<p class="help">Names you can assign as owners. Removing a name leaves existing steps assigned to it until you change them.</p><div class="rows">`+c.people.map((p,i)=>`<div class="erow one"><input data-pf="name" data-i="${i}" value="${esc(p)}" aria-label="Name"${ro}><div class="ebtns"><button class="ibtn" data-rm="people" data-i="${i}" aria-label="Remove ${esc(p)}"${ro}>✕</button></div></div>`).join("")+`</div>${readOnly?"":'<button class="btn small" data-add="people" style="margin-top:10px">+ Add person</button>'}`;}
+  if(mtab==="data"){body=`<div class="field"><span class="flabel">Export</span><p class="help">Copy the whole tracker as JSON to back it up or move it between the shared tracker and a saved copy.</p><div class="actions"><button class="btn small" data-act="copyjson">Copy as JSON</button><button class="btn small" data-act="savejson">Save as a file</button></div></div>
+   ${readOnly?"":`<div class="field" style="margin-top:14px"><label for="m-json">Import</label><p class="help">Paste exported JSON or choose a .json file. Importing replaces every step${store===LocalStore?"":" for the whole team"}.</p><input type="file" id="m-file" accept="application/json,.json"><textarea class="json" id="m-json" placeholder='{"config": {...}, "tasks": [...]}'></textarea>
+   ${mconfirm&&mconfirm.kind==="import"?`<div class="confirmbox"><b>Replace ${all().length} steps with ${mconfirm.n} imported steps?</b><div class="actions"><button class="btn danger" data-act="reallyimport">Replace everything</button><button class="btn" data-act="cancelconfirm">Cancel</button></div></div>`:`<div class="actions"><button class="btn small" data-act="import">Import</button></div>`}</div>
+   ${window.RTA_SEED?`<div class="field" style="margin-top:14px"><span class="flabel">Starter plan</span><p class="help">Reset this copy to the plan from 23 October 2026.</p>${mconfirm&&mconfirm.kind==="reset"?`<div class="confirmbox"><b>Reset to the starter plan?</b><span class="help">Your changes in this browser will be lost.</span><div class="actions"><button class="btn danger" data-act="reallyreset">Reset</button><button class="btn" data-act="cancelconfirm">Cancel</button></div></div>`:'<div class="actions"><button class="btn small" data-act="reset">Reset to starter plan</button></div>'}</div>`:""}`}`;}
+  const tabs=[["lanes","Workstreams"],["stages","Stages"],["team","Team"],["data","Data"]];
+  $("#overlay").innerHTML=`<div class="scrim" data-act="closeset"></div><div class="modal" role="dialog" aria-modal="true" aria-label="Workstreams, team and data">
+   <div class="dhead"><h2>Workstreams, team and data</h2><button class="btn small" data-act="closeset">Close</button></div>
+   <div class="mtabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" data-mtab="${k}" aria-selected="${mtab===k}">${l}</button>`).join("")}</div>
+   <div class="dbody">${body}</div>
+   ${mtab!=="data"&&!readOnly?`<div class="dfoot"><span class="help">Changes apply when you save.</span><div class="actions"><button class="btn" data-act="closeset">Cancel</button><button class="btn primary" data-act="saveset">Save</button></div></div>`:""}
+  </div>`;
+}
+function moveBox(kind,i,n){const list=mdraft[kind].filter((_,j)=>j!==i);const nm=kind==="lanes"?"workstream":"stage";
+  return `<div class="confirmbox">${n?`<b>${n} step${n>1?"s are":" is"} in this ${nm}.</b><label class="help" for="m-target">Move them to</label><select id="m-target">${list.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("")}</select>`:`<b>Remove this ${nm}?</b>`}<div class="actions"><button class="btn danger" data-act="reallyremove">Remove</button><button class="btn" data-act="cancelconfirm">Cancel</button></div></div>`;}
+function syncSettingsInputs(){if(!mdraft)return;
+  $$("[data-lf]").forEach(e=>{mdraft.lanes[+e.dataset.i][e.dataset.lf]=e.value;});
+  $$("[data-sf2]").forEach(e=>{mdraft.stages[+e.dataset.i].name=e.value;});
+  $$("[data-pf]").forEach(e=>{mdraft.people[+e.dataset.i]=e.value;});}
+let pendingMoves=[];
+async function saveSettings(){syncSettingsInputs();const c=mdraft;
+  c.lanes=c.lanes.filter(l=>l.name.trim()).map(l=>({id:l.id,name:l.name.trim(),sub:(l.sub||"").trim()}));
+  c.stages=c.stages.filter(s=>s.name.trim()).map(s=>({id:s.id,name:s.name.trim()}));
+  c.people=[...new Set(c.people.map(p=>p.trim()).filter(Boolean))];
+  if(!c.lanes.length||!c.stages.length){toast("Keep at least one workstream and one stage.");return;}
+  const moves=pendingMoves.slice();
+  const ok=await write(async()=>{await store.saveConfig(c);for(const m of moves){for(const t of all().filter(t=>t[m.field]===m.from)){await store.saveTask(stamp(Object.assign({},t,{[m.field]:m.to})));}}},"Saved");
+  if(ok){pendingMoves=[];closeSettings();}}
+function parseImport(txt){const d=JSON.parse(txt);const ts=Array.isArray(d)?d:d.tasks;if(!Array.isArray(ts))throw new Error("no tasks");
+  return {config:normCfg(d.config||config),tasks:ts.map(t=>norm(Object.assign({},t,{id:(typeof t.id==="string"&&/^[A-Za-z0-9_.~:@+-]{1,100}$/.test(t.id))?t.id:uid()})))};}
+function exportData(){return JSON.stringify({config,tasks:all().sort(byPri)},null,2);}
+
+// ---------- toast ----------
+let tt;function toast(m){$("#toastbox").innerHTML=`<div class="toast">${esc(m)}</div>`;clearTimeout(tt);tt=setTimeout(()=>{$("#toastbox").innerHTML="";},2600);}
+
+// ---------- events ----------
+document.addEventListener("click",async e=>{
+  const a=e.target.closest("[data-act]");
+  const tile=e.target.closest("[data-sf]"); if(tile){F.status=F.status===tile.dataset.sf?"":tile.dataset.sf; if(view==="overview")view="list"; render(); return;}
+  const tab=e.target.closest(".tabs [data-view]"); if(tab){view=tab.dataset.view;pref.set("view",view);render();return;}
+  const sortTh=e.target.closest("th[data-sort]"); if(sortTh){const k=sortTh.dataset.sort;sortDir=sortKey===k?-sortDir:1;sortKey=k;pref.set("sortKey",k);pref.set("sortDir",sortDir);renderList();return;}
+  if(e.target.closest("select[data-inline]"))return;
+  const addc=e.target.closest("[data-add-lane],[data-add-status]"); if(addc){openDrawer(null,addc.dataset.addLane?{lane:addc.dataset.addLane,stage:addc.dataset.addStage}:{status:addc.dataset.addStatus});return;}
+  const op=e.target.closest("[data-open]"); if(op){dirty=false;openDrawer(op.dataset.open);return;}
+  // drawer controls
+  const setb=e.target.closest("[data-set]"); if(setb&&draft){readForm();draft[setb.dataset.set]=setb.dataset.set==="priority"?Number(setb.dataset.v):setb.dataset.v;dirty=true;renderDrawer();return;}
+  const dn=e.target.closest("[data-delnote]"); if(dn&&draft&&openId){readForm();const t=Object.assign({},tasks[openId]);t.notes=t.notes.filter(n=>n.id!==dn.dataset.delnote);if(await saveTask(t,"Note removed")){draft.notes=t.notes;renderDrawer();}return;}
+  // settings controls
+  const mt=e.target.closest("[data-mtab]"); if(mt){syncSettingsInputs();mtab=mt.dataset.mtab;mconfirm=null;renderSettings();return;}
+  const mv=e.target.closest("[data-mv]"); if(mv){syncSettingsInputs();const L=mdraft[mv.dataset.mv],i=+mv.dataset.i,j=i+Number(mv.dataset.d);if(j>=0&&j<L.length){[L[i],L[j]]=[L[j],L[i]];}renderSettings();return;}
+  const rm=e.target.closest("[data-rm]"); if(rm){syncSettingsInputs();const k=rm.dataset.rm,i=+rm.dataset.i;
+    if(k==="people"){mdraft.people.splice(i,1);renderSettings();return;}
+    if(mdraft[k].length<=1){toast("Keep at least one.");return;}
+    mconfirm={kind:k,i};renderSettings();return;}
+  const ad=e.target.closest("[data-add]"); if(ad){syncSettingsInputs();const k=ad.dataset.add;
+    if(k==="lanes")mdraft.lanes.push({id:uid("w"),name:"New workstream",sub:""});
+    if(k==="stages")mdraft.stages.push({id:uid("s"),name:"New stage"});
+    if(k==="people")mdraft.people.push("");
+    renderSettings();const ins=$$(".erow input");ins.length&&ins[ins.length-(k==="lanes"?2:1)].select();return;}
+  const row=!a&&e.target.closest("tbody tr[data-id], .knot[data-id], .card[data-id], .ilist [data-id]"); if(row){openDrawer(row.dataset.id);return;}
+  if(!a)return;
+  const act=a.dataset.act;
+  if(act==="new"){openDrawer(null);}
+  else if(act==="data"){openSettings("data");}
+  else if(act==="close"){closeDrawer();}
+  else if(act==="save"){await saveDraft();}
+  else if(act==="delete"){readForm();confirmDel=true;renderDrawer();}
+  else if(act==="canceldelete"){confirmDel=false;renderDrawer();}
+  else if(act==="reallydelete"){const id=openId;const ok=await write(async()=>{await store.deleteTask(id);for(const t of all().filter(t=>t.needs.includes(id))){await store.saveTask(stamp(Object.assign({},t,{needs:t.needs.filter(n=>n!==id)})));}},"Step deleted");if(ok)closeDrawer();}
+  else if(act==="duplicate"){readForm();const c=Object.assign({},JSON.parse(JSON.stringify(draft)),{id:uid(),title:draft.title+" (copy)",notes:[],updatedAt:"",order:draft.order+0.5});openId=null;drawerOpen=true;dirty=true;draft=c;confirmDel=false;renderDrawer();toast("Copy ready. Edit it, then add it.");}
+  else if(act==="addnote"){const inp=$("#d-note");const txt=inp&&inp.value.trim();if(!txt)return;readForm();
+    const t=Object.assign({},tasks[openId]);t.notes=[...t.notes,{id:uid("n"),at:new Date().toISOString(),by:me||"",text:txt}];
+    if(t.notes.length>60)t.notes=t.notes.slice(-60);
+    const ok=await saveTask(t,"Note added");if(ok&&draft){draft.notes=t.notes;renderDrawer();}}
+  else if(act==="closeset"){closeSettings();}
+  else if(act==="saveset"){await saveSettings();}
+  else if(act==="cancelconfirm"){mconfirm=null;renderSettings();}
+  else if(act==="reallyremove"){syncSettingsInputs();const {kind,i}=mconfirm;const removed=mdraft[kind][i];const sel=$("#m-target");const field=kind==="lanes"?"lane":"stage";
+    if(sel)pendingMoves.push({field,from:removed.id,to:sel.value});mdraft[kind].splice(i,1);mconfirm=null;renderSettings();}
+  else if(act==="copyjson"){const txt=exportData();try{await navigator.clipboard.writeText(txt);toast("Copied. Paste it somewhere safe.");}catch(err){const ta=$("#m-json");if(ta){ta.value=txt;ta.select();toast("Copy blocked. The JSON is selected in the box below.");}}}
+  else if(act==="savejson"){const blob=new Blob([exportData()],{type:"application/json"});const u=URL.createObjectURL(blob);const l=document.createElement("a");l.href=u;l.download="rta-tracker-"+today()+".json";document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);}
+  else if(act==="signin"){try{await fbApi.signIn();}catch(err){if(err&&err.code!=="auth/popup-closed-by-user")toast("Sign-in didn't finish. If a pop-up was blocked, allow pop-ups for this site and try again.");}}
+  else if(act==="signout"){try{await fbApi.signOut();}catch(err){}}
+  else if(act==="import"){try{const d=parseImport($("#m-json").value);mconfirm={kind:"import",n:d.tasks.length,data:d};renderSettings();}catch(err){toast("That isn't tracker JSON. Export from a tracker and paste it here.");}}
+  else if(act==="reallyimport"){const d=mconfirm.data;const ok=await write(()=>store.replaceAll(d.config,d.tasks.map(stamp)),"Imported "+d.tasks.length+" steps");if(ok)closeSettings();}
+  else if(act==="reset"){mconfirm={kind:"reset"};renderSettings();}
+  else if(act==="reallyreset"){const s=JSON.parse(JSON.stringify(window.RTA_SEED));const ok=await write(()=>store.replaceAll(normCfg(s.config),s.tasks.map(norm)),"Reset to the starter plan");if(ok)closeSettings();}
+});
+document.addEventListener("change",async e=>{
+  const sel=e.target.closest("select[data-inline]"); if(sel){const t=Object.assign({},tasks[sel.dataset.tid]);t[sel.dataset.inline]=sel.dataset.inline==="priority"?Number(sel.value):sel.value;await saveTask(t,"Saved");return;}
+  const dep=e.target.closest("[data-dep]"); if(dep&&draft){readForm();const id=dep.dataset.dep;draft.needs=dep.checked?[...new Set([...draft.needs,id])]:draft.needs.filter(x=>x!==id);dirty=true;return;}
+  if(e.target.id==="m-file"){const f=e.target.files&&e.target.files[0];if(!f)return;try{$("#m-json").value=await f.text();}catch(err){toast("Couldn't read that file.");}return;}
+  if(e.target.closest(".drawer")){dirty=true;}
+  if(e.target.id==="fpri"){F.pri=e.target.value;render();} if(e.target.id==="fown"){F.own=e.target.value;render();} if(e.target.id==="flane"){F.lane=e.target.value;render();} if(e.target.id==="frisk"){F.risk=e.target.checked;render();}
+});
+document.addEventListener("input",e=>{
+  if(e.target.id==="fq"){F.q=e.target.value;clearTimeout(window._fq);window._fq=setTimeout(render,150);}
+  if(e.target.closest(".drawer")&&e.target.id!=="d-depq"&&e.target.id!=="d-note")dirty=true;
+  if(e.target.id==="d-depq"){depQ=e.target.value;readForm();const pos=e.target.selectionStart;renderDrawer();const i=$("#d-depq");i.focus();i.setSelectionRange(pos,pos);}
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){if(drawerOpen)closeDrawer();else if(mdraft)closeSettings();}
+  if((e.key==="Enter")&&e.target.id==="d-note"){e.preventDefault();document.querySelector('[data-act="addnote"]').click();}
+  if((e.key==="Enter"||e.key===" ")&&e.target.matches("th[data-sort]")){e.preventDefault();e.target.click();}
+});
+$("#newbtn").addEventListener("click",()=>openDrawer(null));
+$("#setbtn").addEventListener("click",()=>openSettings("lanes"));
+$("#fclear").addEventListener("click",()=>{Object.assign(F,{q:"",pri:"",own:"",lane:"",risk:false,status:""});$("#fq").value="";$("#fpri").value="";$("#fown").value="";$("#flane").value="";$("#frisk").checked=false;render();});
+
+// drag and drop: map cells change workstream and stage, board columns change status
+let dragId=null;
+document.addEventListener("dragstart",e=>{const k=e.target.closest("[data-id][draggable=true]");if(!k)return;dragId=k.dataset.id;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",dragId);}catch(_){}});
+document.addEventListener("dragover",e=>{const z=e.target.closest(".cell[data-lane]:not([data-lane='__none']),.col[data-status]");if(!z||!dragId)return;e.preventDefault();$$(".over").forEach(x=>x!==z&&x.classList.remove("over"));z.classList.add("over");});
+document.addEventListener("dragleave",e=>{const z=e.target.closest(".over");if(z&&!z.contains(e.relatedTarget))z.classList.remove("over");});
+document.addEventListener("drop",async e=>{const z=e.target.closest(".cell[data-lane],.col[data-status]");$$(".over").forEach(x=>x.classList.remove("over"));if(!z||!dragId)return;e.preventDefault();
+  const t=Object.assign({},tasks[dragId]);dragId=null;if(!t.id)return;
+  if(z.dataset.status){if(t.status===z.dataset.status)return;t.status=z.dataset.status;await saveTask(t,"Moved to "+SLABEL[t.status]);}
+  else{if(t.lane===z.dataset.lane&&t.stage===z.dataset.stage)return;t.lane=z.dataset.lane;t.stage=z.dataset.stage;await saveTask(t,"Moved");}});
+document.addEventListener("dragend",()=>{dragId=null;$$(".over").forEach(x=>x.classList.remove("over"));});
+
+})();
+</script>
+</body>
+</html>
