@@ -213,6 +213,20 @@ textarea.json{width:100%;min-height:160px;font-family:ui-monospace,Menlo,monospa
 .emptystate h2{font-size:26px}
 
 
+
+.field label.tick{text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink)}
+.tick{display:flex;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer;font-size:14px;font-weight:500}
+.tick input{width:18px;height:18px;accent-color:var(--risk);margin:0}
+.fbfield:has(#d-risk:checked) label.tick{border-color:var(--risk);background:var(--risk-bg);color:var(--risk)}
+.fbfield:has(#d-risk:checked) textarea{border-color:var(--risk)}
+.field textarea.big{min-height:130px;line-height:1.5}
+.deplist{display:flex;flex-wrap:wrap;gap:6px}
+.depchip{display:inline-flex;align-items:center;gap:6px;background:var(--cb);border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 10px;font-size:12.5px;max-width:100%}
+.depchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.depchip button{border:0;background:none;cursor:pointer;color:var(--muted);width:22px;height:22px;border-radius:50%;flex:none}
+.depchip button:hover{background:var(--surface);color:var(--ink)}
+.depchip.st-todo{background:var(--surface)}
+#d-depadd{margin-top:2px}
 /* ideas */
 .ideahead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .ideahead h2{font-size:28px}
@@ -394,7 +408,7 @@ let view=pref.get("view","map"), sortKey=pref.get("sortKey","priority"), sortDir
 const F={q:"",pri:"",own:"",lane:"",risk:false,status:""};
 let me=null, userCap=null, downloadsCap=null;
 
-function norm(t){return {id:t.id,title:t.title||"Untitled step",lane:t.lane||(config&&config.lanes[0]&&config.lanes[0].id)||"",stage:t.stage||(config&&config.stages[0]&&config.stages[0].id)||"",status:SLABEL[t.status]?t.status:"todo",priority:[0,1,2,3].includes(Number(t.priority))?Number(t.priority):2,owner:t.owner||"",due:t.due||"",what:t.what||"",fallback:t.fallback||"",rec:t.rec||"",needs:Array.isArray(t.needs)?t.needs.filter(x=>typeof x==="string"):[],notes:Array.isArray(t.notes)?t.notes:[],order:typeof t.order==="number"?t.order:0,updatedAt:t.updatedAt||"",updatedBy:t.updatedBy||""};}
+function norm(t){return {id:t.id,title:t.title||"Untitled step",lane:t.lane||(config&&config.lanes[0]&&config.lanes[0].id)||"",stage:t.stage||(config&&config.stages[0]&&config.stages[0].id)||"",status:SLABEL[t.status]?t.status:"todo",priority:[0,1,2,3].includes(Number(t.priority))?Number(t.priority):2,owner:t.owner||"",due:t.due||"",what:t.what||"",fallback:t.fallback||"",atRisk:typeof t.atRisk==="boolean"?t.atRisk:!!t.fallback,rec:t.rec||"",needs:Array.isArray(t.needs)?t.needs.filter(x=>typeof x==="string"):[],notes:Array.isArray(t.notes)?t.notes:[],order:typeof t.order==="number"?t.order:0,updatedAt:t.updatedAt||"",updatedBy:t.updatedBy||""};}
 function normCfg(c){c=c||{};return {lanes:Array.isArray(c.lanes)&&c.lanes.length?c.lanes:DEFAULT_CONFIG.lanes,stages:Array.isArray(c.stages)&&c.stages.length?c.stages:DEFAULT_CONFIG.stages,people:Array.isArray(c.people)?c.people:DEFAULT_CONFIG.people};}
 
 // ---------- stores ----------
@@ -487,11 +501,11 @@ const saveTask=(t,msg)=>write(()=>store.saveTask(stamp(Object.assign({},t))),msg
 
 // ---------- filters ----------
 function matches(t){
-  if(F.status==="risk"){if(!t.fallback)return false;}else if(F.status==="p0open"){if(!(t.priority===0&&t.status!=="done"))return false;}else if(F.status&&t.status!==F.status)return false;
+  if(F.status==="risk"){if(!t.atRisk)return false;}else if(F.status==="p0open"){if(!(t.priority===0&&t.status!=="done"))return false;}else if(F.status&&t.status!==F.status)return false;
   if(F.pri!==""&&String(t.priority)!==F.pri)return false;
   if(F.own&&t.owner!==F.own)return false;
   if(F.lane&&t.lane!==F.lane)return false;
-  if(F.risk&&!t.fallback)return false;
+  if(F.risk&&!t.atRisk)return false;
   if(F.q){const h=(t.title+" "+t.what+" "+t.fallback+" "+t.rec+" "+t.owner).toLowerCase();if(!h.includes(F.q.toLowerCase()))return false;}
   return true;}
 const anyFilter=()=>F.q||F.pri!==""||F.own||F.lane||F.risk||F.status;
@@ -527,7 +541,7 @@ function renderEmpty(){
 function renderSummary(){
   const ts=all(), n=ts.length||1;
   const c={done:0,prog:0,open:0,block:0,todo:0};ts.forEach(t=>c[t.status]++);
-  const risk=ts.filter(t=>t.fallback&&t.status!=="done").length, p0=ts.filter(t=>t.priority===0&&t.status!=="done").length, late=ts.filter(isLate).length;
+  const risk=ts.filter(t=>t.atRisk&&t.status!=="done").length, p0=ts.filter(t=>t.priority===0&&t.status!=="done").length, late=ts.filter(isLate).length;
   const pct=Math.round(100*c.done/n);
   const seg=k=>`<span style="width:${100*c[k]/n}%;background:var(--${k==="todo"?"line":k})"></span>`;
   const tile=(k,l,v,cls)=>`<button class="tile ${cls}" data-sf="${k}" aria-pressed="${F.status===k}"><span class="n">${v}</span><span class="l"><i class="dot ${cls}"></i>${l}</span></button>`;
@@ -547,11 +561,11 @@ function renderMap(){
   });
   $("#view").innerHTML=h+`</div></div>`;
 }
-function knotHTML(t){const show=matches(t);return `<button class="knot st-${t.status}${t.fallback?" risk":""}${show?"":" dim"}${openId===t.id&&drawerOpen?" sel":""}" data-id="${esc(t.id)}" ${readOnly?"":'draggable="true"'} aria-label="${esc(t.title)}, ${SLABEL[t.status]}, priority P${t.priority}${t.fallback?", falling back":""}"><span class="row1"><i class="dot"></i><span>${esc(t.title)}</span></span><span class="meta">${metaHTML(t)}${t.fallback?'<span class="flag">Falling back</span>':""}</span></button>`;}
+function knotHTML(t){const show=matches(t);return `<button class="knot st-${t.status}${t.atRisk?" risk":""}${show?"":" dim"}${openId===t.id&&drawerOpen?" sel":""}" data-id="${esc(t.id)}" ${readOnly?"":'draggable="true"'} aria-label="${esc(t.title)}, ${SLABEL[t.status]}, priority P${t.priority}${t.atRisk?", falling back":""}"><span class="row1"><i class="dot"></i><span>${esc(t.title)}</span></span><span class="meta">${metaHTML(t)}${t.atRisk?'<span class="flag">Falling back</span>':""}</span></button>`;}
 function renderBoard(){
   const ts=all().filter(matches);
   $("#view").innerHTML=`<div class="board">`+STATUSES.map(([k,l])=>{const col=ts.filter(t=>t.status===k).sort(byPri);
-    return `<div class="col st-${k}" data-status="${k}"><h3><span style="display:inline-flex;gap:7px;align-items:center"><i class="dot"></i>${l}</span><span class="c">${col.length}</span></h3>`+col.map(t=>`<button class="card${t.fallback?" risk":""}" data-id="${esc(t.id)}" ${readOnly?"":'draggable="true"'}><span class="t">${esc(t.title)}</span><span class="ln">${esc(laneName(t.lane))} · ${esc(stageName(t.stage))}</span><span class="meta">${metaHTML(t)}${t.fallback?'<span class="flag">Falling back</span>':""}</span></button>`).join("")+(readOnly?"":`<button class="addcell edit-only" style="opacity:.7" data-add-status="${k}">+ Add</button>`)+`</div>`;}).join("")+`</div>`;
+    return `<div class="col st-${k}" data-status="${k}"><h3><span style="display:inline-flex;gap:7px;align-items:center"><i class="dot"></i>${l}</span><span class="c">${col.length}</span></h3>`+col.map(t=>`<button class="card${t.atRisk?" risk":""}" data-id="${esc(t.id)}" ${readOnly?"":'draggable="true"'}><span class="t">${esc(t.title)}</span><span class="ln">${esc(laneName(t.lane))} · ${esc(stageName(t.stage))}</span><span class="meta">${metaHTML(t)}${t.atRisk?'<span class="flag">Falling back</span>':""}</span></button>`).join("")+(readOnly?"":`<button class="addcell edit-only" style="opacity:.7" data-add-status="${k}">+ Add</button>`)+`</div>`;}).join("")+`</div>`;
 }
 const SORTS={title:t=>t.title.toLowerCase(),lane:t=>config.lanes.findIndex(l=>l.id===t.lane)*100+config.stages.findIndex(s=>s.id===t.stage),stage:t=>config.stages.findIndex(s=>s.id===t.stage),status:t=>STATUSES.findIndex(s=>s[0]===t.status),priority:t=>t.priority*1000+t.order,owner:t=>(t.owner||"~").toLowerCase(),due:t=>t.due||"9999",updated:t=>t.updatedAt||""};
 function renderList(){
@@ -559,7 +573,7 @@ function renderList(){
   const th=(k,l)=>`<th data-sort="${k}" ${sortKey===k?`aria-sort="${sortDir>0?"ascending":"descending"}"`:""} tabindex="0">${l}</th>`;
   const dis=readOnly?" disabled":"";
   $("#view").innerHTML=`<div class="tablewrap"><table><thead><tr>${th("title","Step")}${th("lane","Workstream")}${th("stage","Stage")}${th("status","Status")}${th("priority","Priority")}${th("owner","Owner")}${th("due","Due")}${th("updated","Updated")}</tr></thead><tbody>`+
-   (ts.length?ts.map(t=>`<tr data-id="${esc(t.id)}"><td class="title">${esc(t.title)}${t.fallback?'<span class="flag">Falling back</span>':""}</td><td>${esc(laneName(t.lane))}</td><td>${esc(stageName(t.stage))}</td>
+   (ts.length?ts.map(t=>`<tr data-id="${esc(t.id)}"><td class="title">${esc(t.title)}${t.atRisk?'<span class="flag">Falling back</span>':""}</td><td>${esc(laneName(t.lane))}</td><td>${esc(stageName(t.stage))}</td>
    <td><select data-inline="status" data-tid="${esc(t.id)}" aria-label="Status"${dis}>${STATUSES.map(([k,l])=>`<option value="${k}"${k===t.status?" selected":""}>${l}</option>`).join("")}</select></td>
    <td><select data-inline="priority" data-tid="${esc(t.id)}" aria-label="Priority"${dis}>${PRI.map(([v,k,l])=>`<option value="${v}"${Number(v)===t.priority?" selected":""}>${k} ${l}</option>`).join("")}</select></td>
    <td>${esc(t.owner)}</td><td class="${isLate(t)?"due late":""}">${t.due?fmtDate(t.due)+" "+t.due.slice(0,4):""}</td><td class="who">${t.updatedAt?fmtDate(t.updatedAt.slice(0,10)):""}</td></tr>`).join(""):`<tr><td colspan="8" class="empty">No steps match these filters.</td></tr>`)+`</tbody></table></div>`;
@@ -571,7 +585,7 @@ function renderOverview(){
   const people=[...new Set([...config.people,...ts.map(t=>t.owner).filter(Boolean)])];
   const ownRows=people.map(p=>{const pt=ts.filter(t=>t.owner===p&&t.status!=="done");const p0=pt.filter(t=>t.priority<=1).length;return `<div class="lrow"><span>${esc(p)}</span><div class="bar"><span style="width:${Math.min(100,pt.length*6)}%;background:var(--wine)"></span></div><span class="v">${pt.length} open</span></div><div class="help" style="margin:-4px 0 4px 160px">${p0} critical or high</div>`;}).join("");
   const item=t=>`<li><button data-id="${esc(t.id)}"><span class="pri p${t.priority}">P${t.priority}</span><span><b>${esc(t.title)}</b></span><span class="x">${esc(t.fallback||t.rec||t.what)}</span></button></li>`;
-  const risks=ts.filter(t=>t.fallback&&t.status!=="done").sort(byPri);
+  const risks=ts.filter(t=>t.atRisk&&t.status!=="done").sort(byPri);
   const next=ts.filter(t=>t.status!=="done"&&t.status!=="block"&&t.needs.every(n=>!tasks[n]||tasks[n].status==="done")).sort(byPri).slice(0,10);
   const blocked=ts.filter(t=>t.status!=="done"&&(t.status==="block"||t.needs.some(n=>tasks[n]&&tasks[n].status!=="done"))).sort(byPri);
   const late=ts.filter(isLate).sort((a,b)=>a.due.localeCompare(b.due));
@@ -616,11 +630,13 @@ function renderDrawer(){
      <div class="field"><label for="d-due">Due date</label><input type="date" id="d-due" value="${esc(t.due)}"${ro}></div>
     </div>
     <div class="field"><label for="d-what">What it involves</label><textarea id="d-what" rows="3"${ro}>${esc(t.what)}</textarea></div>
-    <div class="field"><label for="d-fb">Where we fall back <span style="text-transform:none;letter-spacing:0">(leave empty if on track)</span></label><textarea id="d-fb" rows="2"${ro}>${esc(t.fallback)}</textarea></div>
-    <div class="field"><label for="d-rec">Recommendation or next action</label><textarea id="d-rec" rows="2"${ro}>${esc(t.rec)}</textarea></div>
-    <div class="field"><label for="d-depq">Needs these steps first</label>
-     <input id="d-depq" placeholder="Find a step" value="${esc(depQ)}">
-     <div class="deps">${depList.map(x=>`<label><input type="checkbox" data-dep="${esc(x.id)}"${t.needs.includes(x.id)?" checked":""}${ro}><span>${esc(x.title)}<br><small>${esc(laneName(x.lane))} · ${SLABEL[x.status]}</small></span></label>`).join("")||'<div class="empty">No other steps.</div>'}</div></div>
+    <div class="field fbfield"><span class="flabel">Fall back</span>
+     <label class="tick" for="d-risk"><input type="checkbox" id="d-risk"${t.atRisk?" checked":""}${ro}><span>We're falling back on this step</span></label>
+     <textarea id="d-fb" class="big" rows="5" placeholder="What's going wrong, and what it's holding up"${ro}>${esc(t.fallback)}</textarea></div>
+    <div class="field"><label for="d-rec">Recommendation or next action</label><textarea id="d-rec" class="big" rows="5" placeholder="What should happen next, and who does it"${ro}>${esc(t.rec)}</textarea></div>
+    <div class="field"><label for="d-depadd">Needs these steps first</label>
+     <div class="deplist">${t.needs.filter(n=>tasks[n]).map(n=>`<span class="depchip st-${tasks[n].status}"><i class="dot"></i><span>${esc(tasks[n].title)}</span>${readOnly?"":`<button type="button" data-deprm="${esc(n)}" aria-label="Remove ${esc(tasks[n].title)}">✕</button>`}</span>`).join("")||'<span class="help">Nothing yet. This step can start any time.</span>'}</div>
+     ${readOnly?"":`<select id="d-depadd"><option value="">+ Add a step this needs…</option>${depGroups(t)}</select>`}</div>
     ${unblocks.length?`<div class="field"><span class="flabel">Unblocks</span><div class="chips">${unblocks.map(u=>`<button class="chip" data-open="${esc(u.id)}">${esc(u.title)}</button>`).join("")}</div></div>`:""}
     ${isNew?"":`<div class="field"><span class="flabel">Notes and updates</span><div class="notes">${t.notes.slice().reverse().map(n=>`<div class="note"><div class="when"><span>${esc(fmtDate((n.at||"").slice(0,10)))} ${esc((n.at||"").slice(0,4))}${n.by?" · "+esc(n.by):""}</span>${readOnly?"":`<button data-delnote="${esc(n.id)}">Remove</button>`}</div>${esc(n.text)}</div>`).join("")||'<div class="empty">No notes yet.</div>'}
       ${readOnly?"":`<div class="addnote"><input id="d-note" placeholder="Add an update, e.g. “Weaver in Gadwal replied”"><button class="btn small" data-act="addnote">Add</button></div>`}</div></div>`}
@@ -632,7 +648,10 @@ function renderDrawer(){
   resolveStamp(t);
 }
 function resolveStamp(t){const el=$("#stampwho");if(el&&t.updatedBy)el.textContent=" by "+t.updatedBy;}
-function readForm(){const t=draft;if(!t)return;
+function depGroups(t){const cand=all().filter(x=>x.id!==t.id&&!t.needs.includes(x.id));
+  const groups=config.lanes.map(l=>[l.name,cand.filter(x=>x.lane===l.id)]);groups.push(["Other",cand.filter(x=>!config.lanes.find(l=>l.id===x.lane))]);
+  return groups.filter(g=>g[1].length).map(([n,xs])=>`<optgroup label="${esc(n)}">${xs.sort(byPri).map(x=>`<option value="${esc(x.id)}">${esc(x.title)} (${SLABEL[x.status]})</option>`).join("")}</optgroup>`).join("");}
+function readForm(){const t=draft;if(!t)return;{const r=$("#d-risk");if(r)t.atRisk=r.checked;}
   const v=id=>{const e=$("#"+id);return e?e.value:undefined;};
   if(v("d-title")!==undefined)t.title=v("d-title").trim();
   t.lane=v("d-lane")||t.lane;t.stage=v("d-stage")||t.stage;t.owner=v("d-owner")||"";t.due=v("d-due")||"";
@@ -867,7 +886,7 @@ function renderMindmap(){
     labels+=`<text class="mml hubl" x="${(h.x+lx).toFixed(1)}" y="${(h.y+ly).toFixed(1)}" dy=".35em" text-anchor="${anc}">${esc(h.name)} <tspan class="cnt">${items.filter(it=>it.hub===h.id).length}</tspan></text>`;});
   items.forEach(it=>{const deg=it.a*180/Math.PI,left=Math.cos(it.a)<0,h=hubById[it.hub];const dim=hit(it)?"":" dim";
     const shape=it.type==="step"?`<circle r="6.5" class="st st-${it.ref.status}"/>`:`<rect x="-6" y="-6" width="12" height="12" transform="rotate(45)" class="idn${it.ref.visibility==="private"?" priv":""}" style="--hc:${h?h.c:"var(--wine)"}"/>`;
-    nodes+=`<g class="mmn${dim}${it.type==="step"&&it.ref.fallback?" risk":""}" data-k="${esc(it.key)}" transform="translate(${it.x.toFixed(1)} ${it.y.toFixed(1)})" tabindex="0" role="button" aria-label="${esc(it.label)}">${shape}<text class="mml" transform="rotate(${left?deg+180:deg})" x="${left?-12:12}" dy=".35em" text-anchor="${left?"end":"start"}">${esc(cut(it.label))}</text></g>`;});
+    nodes+=`<g class="mmn${dim}${it.type==="step"&&it.ref.atRisk?" risk":""}" data-k="${esc(it.key)}" transform="translate(${it.x.toFixed(1)} ${it.y.toFixed(1)})" tabindex="0" role="button" aria-label="${esc(it.label)}">${shape}<text class="mml" transform="rotate(${left?deg+180:deg})" x="${left?-12:12}" dy=".35em" text-anchor="${left?"end":"start"}">${esc(cut(it.label))}</text></g>`;});
   const ext=R2+175;
   const grp=[["lane","Workstream"],["status","Status"],["stage","Stage"],["owner","Owner"]];
   $("#view").innerHTML=`<div class="mmbar"><div class="seg" role="group" aria-label="Group by"><span class="flabel" style="align-self:center;margin-right:4px">Group by</span>${grp.map(([k,l])=>`<button data-mmg="${k}" aria-pressed="${MM.group===k}">${l}</button>`).join("")}</div>
@@ -887,7 +906,7 @@ function mmSelect(k){MM.sel=k;mmFocus(k);const box=$("#mminfo");if(!box)return;i
   let h="";
   if(k.startsWith("t:")){const t=tasks[k.slice(2)];if(!t){box.hidden=true;return;}
     const linkedIdeas=allIdeas().filter(i=>i.linkedTasks.includes(t.id));
-    h=`<div class="eyebrow">Step · ${esc(laneName(t.lane))}</div><h3>${esc(t.title)}</h3><div class="meta" style="padding-left:0"><span class="pill2 st-${t.status}"><i class="dot"></i>${SLABEL[t.status]}</span>${metaHTML(t)}</div>${t.fallback?`<p class="fb">${esc(t.fallback)}</p>`:t.what?`<p>${esc(t.what)}</p>`:""}
+    h=`<div class="eyebrow">Step · ${esc(laneName(t.lane))}</div><h3>${esc(t.title)}</h3><div class="meta" style="padding-left:0"><span class="pill2 st-${t.status}"><i class="dot"></i>${SLABEL[t.status]}</span>${metaHTML(t)}</div>${t.atRisk&&t.fallback?`<p class="fb">${esc(t.fallback)}</p>`:t.what?`<p>${esc(t.what)}</p>`:""}
      ${t.needs.length?`<div class="flabel">Needs</div><div class="chips">${t.needs.filter(n=>tasks[n]).map(n=>`<button class="chip" data-mmgo="t:${esc(n)}">${esc(tasks[n].title)}</button>`).join("")}</div>`:""}
      ${linkedIdeas.length?`<div class="flabel">Ideas</div><div class="chips">${linkedIdeas.map(i=>`<button class="chip" data-mmgo="i:${esc(i.id)}">${esc(i.title)}</button>`).join("")}</div>`:""}
      <button class="btn small primary" data-open="${esc(t.id)}">Open step</button>`;}
@@ -930,6 +949,7 @@ document.addEventListener("click",async e=>{
   const addc=e.target.closest("[data-add-lane],[data-add-status]"); if(addc){openDrawer(null,addc.dataset.addLane?{lane:addc.dataset.addLane,stage:addc.dataset.addStage}:{status:addc.dataset.addStatus});return;}
   const op=e.target.closest("[data-open]"); if(op){dirty=false;openDrawer(op.dataset.open);return;}
   // drawer controls
+  const drm=e.target.closest("[data-deprm]"); if(drm&&draft){readForm();draft.needs=draft.needs.filter(x=>x!==drm.dataset.deprm);dirty=true;renderDrawer();return;}
   const setb=e.target.closest("[data-set]"); if(setb&&draft){readForm();draft[setb.dataset.set]=setb.dataset.set==="priority"?Number(setb.dataset.v):setb.dataset.v;dirty=true;renderDrawer();return;}
   const dn=e.target.closest("[data-delnote]"); if(dn&&draft&&openId){readForm();const t=Object.assign({},tasks[openId]);t.notes=t.notes.filter(n=>n.id!==dn.dataset.delnote);if(await saveTask(t,"Note removed")){draft.notes=t.notes;renderDrawer();}return;}
   // settings controls
@@ -975,6 +995,7 @@ document.addEventListener("click",async e=>{
 });
 document.addEventListener("change",async e=>{
   if(ideaChange(e))return;
+  if(e.target.id==="d-depadd"&&draft){const id=e.target.value;if(!id)return;readForm();draft.needs=[...new Set([...draft.needs,id])];dirty=true;renderDrawer();const s2=$("#d-depadd");s2&&s2.focus();return;}
   const sel=e.target.closest("select[data-inline]"); if(sel){const t=Object.assign({},tasks[sel.dataset.tid]);t[sel.dataset.inline]=sel.dataset.inline==="priority"?Number(sel.value):sel.value;await saveTask(t,"Saved");return;}
   const dep=e.target.closest("[data-dep]"); if(dep&&draft){readForm();const id=dep.dataset.dep;draft.needs=dep.checked?[...new Set([...draft.needs,id])]:draft.needs.filter(x=>x!==id);dirty=true;return;}
   if(e.target.id==="m-file"){const f=e.target.files&&e.target.files[0];if(!f)return;try{$("#m-json").value=await f.text();}catch(err){toast("Couldn't read that file.");}return;}
